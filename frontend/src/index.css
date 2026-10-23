@@ -158,7 +158,8 @@ input::placeholder, textarea::placeholder {
 }
 
 /* ==========================================================================
-   Modern App Shell & Responsive Sidebar Layout
+   Apple-Style Minimalist Modern Light Sidebar
+   Clean, refined, compact, subtle accents & breathable whitespace
    ========================================================================== */
 
 .app-shell {
@@ -169,50 +170,82 @@ input::placeholder, textarea::placeholder {
   position: relative;
 }
 
-/* Desktop Sidebar */
-.app-sidebar {
-  width: 280px;
-  min-width: 280px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid var(--border-subtle);
+/* Sidebar Desktop Frame */
+.apple-sidebar {
+  width: 250px;
+  min-width: 250px;
+  background: rgba(254, 252, 250, 0.9);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-right: 1px solid rgba(43, 27, 23, 0.08);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
   z-index: 40;
-  box-shadow: 4px 0 24px rgba(58, 38, 30, 0.05);
+  box-shadow: 1px 0 16px rgba(43, 27, 23, 0.02);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 16px 10px 14px 10px;
 }
 
-.sidebar-top {
-  padding: 20px 20px 16px;
+/* Brand Header */
+.apple-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 4px 6px 12px 6px;
 }
 
-.sidebar-brand {
+.apple-brand-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   user-select: none;
+  text-decoration: none;
 }
 
-.sidebar-brand-text {
+.apple-brand-avatar-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #ffffff;
+  border: 1px solid rgba(43, 27, 23, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.apple-brand-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.apple-brand-meta {
   display: flex;
   flex-direction: column;
+  line-height: 1.15;
 }
 
-.brand-subtitle {
-  font-size: 0.72rem;
-  font-weight: 600;
+.apple-brand-name {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+}
+
+.apple-brand-tagline {
+  font-size: 0.68rem;
+  font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
+  letter-spacing: 0.1px;
 }
 
 .btn-sidebar-close {
@@ -223,6 +256,7 @@ input::placeholder, textarea::placeholder {
   color: var(--text-muted);
   border-radius: 8px;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .btn-sidebar-close:hover {
@@ -230,213 +264,262 @@ input::placeholder, textarea::placeholder {
   color: var(--text-main);
 }
 
-/* User Card in Sidebar */
-.sidebar-user-card {
-  margin: 16px;
-  padding: 14px;
-  background: #fbf8f5;
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+/* User Capsule (Apple Style) */
+.apple-user-section {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(43, 27, 23, 0.06);
+  margin-bottom: 4px;
 }
 
-.sidebar-user-header {
+.apple-user-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.sidebar-avatar-circle {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+.apple-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   background: var(--primary-rose);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.76rem;
   font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px var(--primary-rose-glow);
+  letter-spacing: 0.4px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(134, 87, 100, 0.22);
 }
 
-.sidebar-avatar-circle.admin-avatar {
+.apple-avatar.is-admin {
   background: linear-gradient(135deg, #f59e0b, #d97706);
-  font-size: 1.2rem;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
 }
 
-.sidebar-user-details {
+.apple-user-info {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.sidebar-user-name {
-  font-size: 0.92rem;
+.apple-user-display-name {
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.1px;
 }
 
-.sidebar-user-handle {
-  font-size: 0.78rem;
+.apple-user-role {
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.sidebar-status-tag {
+/* Status Pill */
+.apple-status-row {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(43, 27, 23, 0.07);
+}
+
+.apple-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 9999px;
 }
 
-.sidebar-status-tag.verified {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+.apple-status-pill.verified {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #dcfce7;
 }
 
-.sidebar-status-tag.unverified {
+.apple-status-pill.unverified {
   background: #fffbeb;
   color: #92400e;
-  border: 1px solid #fde68a;
+  border: 1px solid #fef3c7;
 }
 
-/* Sidebar Nav Items */
-.sidebar-nav {
-  padding: 8px 14px;
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.sidebar-nav-section-title {
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  color: var(--text-faint);
-  padding: 10px 10px 4px;
-  text-transform: uppercase;
-}
-
-.sidebar-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.92rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sidebar-nav-item:hover {
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--text-main);
-  border-color: var(--border-subtle);
-  transform: translateX(3px);
-}
-
-.sidebar-nav-item.active {
-  background: var(--primary-rose);
-  color: #ffffff;
-  font-weight: 700;
-  box-shadow: 0 4px 14px var(--primary-rose-glow);
-  border-color: transparent;
-}
-
-.sidebar-nav-item-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.sidebar-nav-item-label {
+.status-dot.green {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.status-dot.amber {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+/* Subtle Divider */
+.apple-sidebar-divider {
+  height: 1px;
+  background: rgba(43, 27, 23, 0.06);
+  margin: 6px 4px 10px 4px;
+}
+
+/* Nav Group */
+.apple-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   flex: 1;
-  min-width: 0;
+  overflow-y: auto;
+  padding: 0 2px;
 }
 
-.sidebar-nav-count-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-}
-
-.sidebar-nav-item:not(.active) .sidebar-nav-count-badge {
-  background: var(--primary-rose-light);
-  color: var(--primary-rose);
-}
-
-.sidebar-nav-sparkle-pill {
-  font-size: 0.72rem;
+.apple-nav-caption {
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
+  letter-spacing: 0.06em;
+  color: #9c8e87;
+  text-transform: uppercase;
+  padding: 6px 8px 4px 8px;
 }
 
-.sidebar-nav-item:not(.active) .sidebar-nav-sparkle-pill {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-/* Sidebar Bottom */
-.sidebar-bottom {
-  padding: 16px;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.btn-sidebar-logout {
+/* Apple Nav Item / Link */
+.apple-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
+  color: #4b3d39;
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.apple-nav-link:hover {
+  background: rgba(134, 87, 100, 0.06);
+  color: var(--text-main);
+}
+
+.apple-nav-link.active {
+  background: rgba(134, 87, 100, 0.11);
+  color: var(--primary-rose);
+  font-weight: 700;
+}
+
+.apple-nav-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 14px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary-rose);
+  transition: transform 0.15s ease;
+}
+
+.apple-nav-link.active .apple-nav-indicator {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.apple-nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 10px 16px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  color: #7b6d67;
+  transition: color 0.15s ease;
 }
 
-.btn-sidebar-logout:hover {
+.apple-nav-link.active .apple-nav-icon {
+  color: var(--primary-rose);
+}
+
+.apple-nav-text {
+  flex: 1;
+  min-width: 0;
+  letter-spacing: -0.1px;
+}
+
+.apple-nav-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: rgba(134, 87, 100, 0.12);
+  color: var(--primary-rose);
+}
+
+.apple-nav-badge-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(43, 27, 23, 0.06);
+  color: #63544e;
+}
+
+.apple-nav-link.active .apple-nav-badge-pill {
+  background: rgba(134, 87, 100, 0.16);
+  color: var(--primary-rose);
+}
+
+/* Footer / Logout */
+.apple-sidebar-footer {
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.apple-btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #8c7e77;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.apple-btn-logout:hover {
   background: #fef2f2;
   color: #b91c1c;
-  border-color: #fca5a5;
 }
 
-/* Main Viewport */
+/* Main Viewport & Content Spacing */
 .app-main-viewport {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 32px 36px 60px;
+  padding: 28px 36px 60px;
   overflow-y: auto;
 }
 
@@ -448,7 +531,7 @@ input::placeholder, textarea::placeholder {
   display: none;
 }
 
-/* Legacy App Container (fallback) */
+/* Fallback App Container */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -1605,33 +1688,34 @@ input::placeholder, textarea::placeholder {
     flex-direction: column;
   }
 
-  /* Show mobile header bar */
+  /* Show Apple-style minimal mobile top bar */
   .mobile-header-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 14px;
+    background: rgba(254, 252, 250, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(43, 27, 23, 0.08);
     position: sticky;
     top: 0;
     z-index: 50;
-    box-shadow: 0 4px 16px rgba(58, 38, 30, 0.06);
+    box-shadow: 0 2px 10px rgba(43, 27, 23, 0.03);
   }
 
   .btn-mobile-menu {
     background: #ffffff;
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    width: 38px;
-    height: 38px;
+    border: 1px solid rgba(43, 27, 23, 0.1);
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-main);
     cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
 
   .mobile-header-brand {
@@ -1641,21 +1725,70 @@ input::placeholder, textarea::placeholder {
     cursor: pointer;
   }
 
-  /* Off-canvas Sidebar Drawer */
-  .app-sidebar {
+  .mobile-brand-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 2px;
+    border: 1px solid rgba(43, 27, 23, 0.08);
+  }
+
+  .mobile-brand-title {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .mobile-brand-title span:first-child {
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .mobile-brand-sub {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .apple-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+
+  .apple-badge.lucky-badge {
+    background: rgba(134, 87, 100, 0.12);
+    color: var(--primary-rose);
+  }
+
+  .apple-badge.admin-badge {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  /* Off-canvas Apple-style Sidebar Drawer */
+  .apple-sidebar {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 285px;
-    max-width: 84vw;
+    width: 265px;
+    max-width: 82vw;
     z-index: 100;
-    box-shadow: 6px 0 35px rgba(58, 38, 30, 0.28);
+    background: rgba(254, 252, 250, 0.98);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    box-shadow: 10px 0 35px rgba(43, 27, 23, 0.15);
+    border-right: 1px solid rgba(43, 27, 23, 0.1);
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .app-sidebar.mobile-open {
+  .apple-sidebar.mobile-open {
     transform: translateX(0);
   }
 
@@ -1672,9 +1805,9 @@ input::placeholder, textarea::placeholder {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(28, 20, 16, 0.5);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    background: rgba(43, 27, 23, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 90;
     animation: fadeIn 0.2s ease;
   }
