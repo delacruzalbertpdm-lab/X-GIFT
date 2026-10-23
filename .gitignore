@@ -23,8 +23,6 @@ media/
 # Node / Frontend
 node_modules/
 frontend/node_modules/
-dist/
-frontend/dist/
 dist-ssr/
 npm-debug.log*
 yarn-debug.log*
