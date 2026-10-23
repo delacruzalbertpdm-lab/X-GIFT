@@ -15,8 +15,7 @@ import { api } from '../api';
 import UserWishlistInspectModal from './UserWishlistInspectModal';
 import AdminQuestionsModule from './AdminQuestionsModule';
 
-export default function AdminView() {
-  const [adminSubTab, setAdminSubTab] = useState('participants'); // 'participants' | 'questions'
+export default function AdminView({ currentTab = 'admin_participants' }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -163,23 +162,6 @@ export default function AdminView() {
         </div>
       </div>
 
-      {/* Admin Module Switcher Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: '#fbf8f5', padding: '5px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)', width: 'fit-content', flexWrap: 'wrap' }}>
-        <button
-          className={`nav-tab-btn ${adminSubTab === 'participants' ? 'active' : ''}`}
-          onClick={() => setAdminSubTab('participants')}
-        >
-          <Users size={16} />
-          <span>Participants & Matches</span>
-        </button>
-        <button
-          className={`nav-tab-btn ${adminSubTab === 'questions' ? 'active' : ''}`}
-          onClick={() => setAdminSubTab('questions')}
-        >
-          <span>🐹 Hamster Verification Questions (Module)</span>
-        </button>
-      </div>
-
       {toastMsg.text && (
         <div className={`toast-banner ${toastMsg.type === 'error' ? 'toast-error' : 'toast-success'}`}>
           {toastMsg.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
@@ -187,7 +169,7 @@ export default function AdminView() {
         </div>
       )}
 
-      {adminSubTab === 'questions' ? (
+      {currentTab === 'admin_questions' ? (
         <AdminQuestionsModule />
       ) : (
         <>

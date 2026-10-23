@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import HeroTicket from './components/HeroTicket';
 import WishlistView from './components/WishlistView';
 import LuckyDrawView from './components/LuckyDrawView';
@@ -11,7 +11,8 @@ import { RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('wishlist'); // 'wishlist' | 'draw' | 'admin'
+  const [activeTab, setActiveTab] = useState('wishlist'); // 'wishlist' | 'draw' | 'admin_participants' | 'admin_questions'
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [drawStatus, setDrawStatus] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -20,8 +21,8 @@ export default function App() {
     try {
       const user = await api.getMe();
       setCurrentUser(user);
-      if (user.is_staff) {
-        setActiveTab('admin');
+      if (user.is_staff && (activeTab === 'wishlist' || activeTab === 'draw')) {
+        setActiveTab('admin_participants');
       }
 
       const [items, draw] = await Promise.all([
@@ -52,7 +53,9 @@ export default function App() {
   const handleLoginSuccess = async (user) => {
     setCurrentUser(user);
     if (user.is_staff) {
-      setActiveTab('admin');
+      setActiveTab('admin_participants');
+    } else {
+      setActiveTab('wishlist');
     }
     setInitialLoading(true);
     await fetchAppData();
@@ -118,42 +121,47 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
-      <Navbar
+    <div className="app-shell">
+      <Sidebar
         user={currentUser}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        wishlistCount={wishlistItems.length}
         onLogout={handleLogout}
+        mobileOpen={mobileSidebarOpen}
+        setMobileOpen={setMobileSidebarOpen}
       />
 
-      <main className="main-content">
-        {!currentUser.is_staff && (
-          <HeroTicket user={currentUser} />
-        )}
+      <div className="app-main-viewport">
+        <main className="main-content">
+          {!currentUser.is_staff && (
+            <HeroTicket user={currentUser} />
+          )}
 
-        {!currentUser.is_staff && activeTab === 'wishlist' && (
-          <WishlistView
-            items={wishlistItems}
-            onAddItem={handleAddItem}
-            onUpdateItem={handleUpdateItem}
-            onDeleteItem={handleDeleteItem}
-            onGoToDraw={() => setActiveTab('draw')}
-          />
-        )}
+          {!currentUser.is_staff && activeTab === 'wishlist' && (
+            <WishlistView
+              items={wishlistItems}
+              onAddItem={handleAddItem}
+              onUpdateItem={handleUpdateItem}
+              onDeleteItem={handleDeleteItem}
+              onGoToDraw={() => setActiveTab('draw')}
+            />
+          )}
 
-        {!currentUser.is_staff && activeTab === 'draw' && (
-          <LuckyDrawView
-            drawStatus={drawStatus}
-            wishlistCount={wishlistItems.length}
-            onPickDraw={handlePickDraw}
-            onGoToWishlist={() => setActiveTab('wishlist')}
-          />
-        )}
+          {!currentUser.is_staff && activeTab === 'draw' && (
+            <LuckyDrawView
+              drawStatus={drawStatus}
+              wishlistCount={wishlistItems.length}
+              onPickDraw={handlePickDraw}
+              onGoToWishlist={() => setActiveTab('wishlist')}
+            />
+          )}
 
-        {currentUser.is_staff && (
-          <AdminView />
-        )}
-      </main>
+          {currentUser.is_staff && (
+            <AdminView currentTab={activeTab} />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
