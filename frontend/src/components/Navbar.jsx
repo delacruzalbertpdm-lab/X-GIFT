@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gift, Sparkles, ListChecks, Dice5, ShieldCheck, LogOut } from 'lucide-react';
+import { ListChecks, Dice5, LogOut } from 'lucide-react';
 
 export default function Navbar({ user, activeTab, setActiveTab, onLogout }) {
   return (
@@ -34,37 +34,19 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }) {
           </>
         )}
 
-        {user?.is_staff && (
-          <button
-            className={`nav-tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('admin')}
-          >
-            <ShieldCheck size={18} />
-            <span>Admin Monitoring Center</span>
-          </button>
-        )}
       </nav>
 
       <div className="nav-right">
-        {user && (
+        {user && !user.is_staff && (
           <div className="user-badge-chip">
-            {user.is_staff ? (
-              <>
-                <span className="user-lucky-tag admin-tag">👑 Admin</span>
-                <span className="user-name-text">{user.display_name || user.username} (Monitoring)</span>
-              </>
-            ) : (
-              <>
-                <span className="user-lucky-tag">#{user.assigned_number}</span>
-                <span className="user-name-text">{user.display_name || user.username}</span>
-              </>
-            )}
+            <span className="user-lucky-tag">#{user.assigned_number}</span>
+            <span className="user-name-text">{user.display_name || user.username}</span>
           </div>
         )}
 
         <button className="btn-ghost-logout" onClick={onLogout} title="Log Out">
           <LogOut size={16} />
-          <span>Exit</span>
+          <span>Logout</span>
         </button>
       </div>
     </header>
