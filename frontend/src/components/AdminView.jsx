@@ -125,22 +125,24 @@ export default function AdminView() {
 
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-secondary" onClick={loadAdminData} disabled={actionLoading}>
+        <div className="admin-actions-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button className="btn-secondary" onClick={loadAdminData} disabled={actionLoading} title="Refresh Data">
             <RefreshCw size={16} />
+            <span className="btn-text-desktop">Refresh</span>
           </button>
-          <button className="btn-primary" onClick={handleAutoMatch} disabled={actionLoading}>
+          <button className="btn-primary" onClick={handleAutoMatch} disabled={actionLoading} title="Auto-Match All Participants">
             <Shuffle size={16} />
-
+            <span className="btn-text-desktop">Auto-Match All</span>
           </button>
           <button
             className="btn-secondary"
             onClick={() => handleResetMatches(null)}
             disabled={actionLoading}
-            style={{ color: '#f87171' }}
+            style={{ color: '#b91c1c' }}
+            title="Reset All Matches"
           >
             <RotateCcw size={16} />
-
+            <span className="btn-text-desktop">Reset</span>
           </button>
         </div>
       </div>

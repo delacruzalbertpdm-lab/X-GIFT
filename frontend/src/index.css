@@ -468,6 +468,10 @@ input::placeholder, textarea::placeholder {
   border-color: var(--border-muted);
 }
 
+.btn-text-desktop {
+  display: inline;
+}
+
 .btn-emerald {
   background: var(--primary-emerald);
   color: white;
@@ -1254,49 +1258,464 @@ input::placeholder, textarea::placeholder {
   border: 1px solid #a7f3d0;
 }
 
-/* Responsive adjustments */
+/* ==========================================================================
+   Comprehensive Mobile & Tablet Responsive Architecture
+   Optimized for phones (iPhone / Android: 320px - 480px) & tablets (up to 860px)
+   ========================================================================== */
+
+/* Tablet & Mobile Breakpoint (<= 860px) */
 @media (max-width: 860px) {
   .app-container {
-    padding: 12px 14px 40px;
+    padding: 14px 16px 48px;
   }
+
+  .auth-split-wrapper {
+    padding: 16px 12px;
+    min-height: 100dvh;
+  }
+
   .auth-split-card {
     flex-direction: column-reverse;
-    max-width: 480px;
+    max-width: 460px;
+    border-radius: 26px;
+    box-shadow: 0 18px 45px rgba(58, 38, 30, 0.16);
   }
-  .auth-split-form-col {
-    padding: 36px 24px;
-  }
+
   .auth-split-visual-col {
-    padding: 12px;
+    padding: 12px 12px 0 12px;
+    flex: unset;
   }
+
   .auth-visual-inner {
-    padding: 24px 18px 20px;
+    min-height: unset;
+    height: 190px;
+    padding: 14px;
+    border-radius: 20px;
   }
+
   .hamster-hero-img {
-    max-width: 220px;
+    max-height: 165px;
+    max-width: 200px;
+  }
+
+  .auth-split-form-col {
+    padding: 28px 22px 32px 22px;
+    flex: unset;
+  }
+
+  .auth-main-title {
+    font-size: 1.85rem;
   }
 }
 
+/* Standard Mobile Breakpoint (<= 768px) */
 @media (max-width: 768px) {
   .navbar {
-    padding: 12px 16px;
+    padding: 10px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    top: 10px;
+    gap: 10px;
     flex-wrap: wrap;
-    gap: 12px;
   }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .nav-center {
     order: 3;
     width: 100%;
-    justify-content: center;
+    padding: 4px;
+    gap: 4px;
+    background: #fbf8f5;
   }
+
+  .nav-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 0.85rem;
+  }
+
+  .nav-right {
+    gap: 8px;
+  }
+
+  .user-badge-chip {
+    padding: 5px 10px;
+    gap: 6px;
+  }
+
+  .user-lucky-tag {
+    font-size: 0.78rem;
+    padding: 3px 8px;
+  }
+
+  .user-name-text {
+    font-size: 0.82rem;
+    max-width: 110px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-ghost-logout {
+    padding: 7px 12px;
+    font-size: 0.82rem;
+  }
+
+  /* Ticket Pass */
   .ticket-hero {
     flex-direction: column;
     text-align: center;
-    gap: 20px;
-    padding: 26px 20px;
+    gap: 18px;
+    padding: 24px 18px;
+    border-radius: 22px;
+    margin-bottom: 24px;
   }
+
+  .ticket-tag-chip {
+    margin: 0 auto 8px;
+  }
+
+  .ticket-greeting {
+    font-size: 1.45rem;
+  }
+
+  .ticket-desc {
+    font-size: 0.88rem;
+    margin: 0 auto;
+  }
+
+  .ticket-badge-box {
+    width: 100%;
+    min-width: unset;
+    padding: 14px 20px;
+    border-radius: 18px;
+  }
+
+  .ticket-badge-box .ticket-number {
+    font-size: 2.3rem;
+  }
+
+  /* Wishlist Grid */
+  .wishlist-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Lucky Draw Card */
+  .draw-interactive-card {
+    padding: 34px 18px;
+    border-radius: 22px;
+  }
+
+  .draw-icon-halo {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 18px;
+  }
+
+  .draw-title {
+    font-size: 1.6rem;
+  }
+
+  .draw-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  .btn-big-draw {
+    width: 100%;
+    max-width: 100%;
+    padding: 15px 24px;
+    font-size: 1.05rem;
+    justify-content: center;
+  }
+
+  .spinning-number-display {
+    font-size: 3rem;
+  }
+
+  .result-card {
+    padding: 24px 18px;
+    border-radius: 22px;
+  }
+
   .result-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .result-number-highlight {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .result-number-badge {
+    font-size: 2rem;
+    padding: 6px 22px;
+  }
+
+  .result-name {
+    font-size: 1.4rem;
+  }
+
+  /* Admin Header */
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
     gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .section-header > div:last-child {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .section-header > div:last-child .btn-primary,
+  .section-header > div:last-child .btn-secondary {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .stat-box {
+    padding: 16px 14px;
+    border-radius: 18px;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+  }
+
+  .admin-search-wrap {
+    max-width: 100%;
+  }
+
+  .table-container {
+    border-radius: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+}
+
+/* Small Smartphone Breakpoint (<= 480px) */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 10px 12px 40px;
+  }
+
+  .brand-title {
+    font-size: 0.94rem;
+    max-width: 150px;
+  }
+
+  .user-badge-chip .user-name-text {
+    display: none;
+  }
+
+  .user-badge-chip {
+    padding: 4px 8px;
+  }
+
+  .btn-ghost-logout span {
+    display: none;
+  }
+
+  .btn-ghost-logout {
+    padding: 8px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .btn-text-desktop {
+    display: none;
+  }
+
+  .auth-split-wrapper {
+    padding: 10px 8px;
+  }
+
+  .auth-split-card {
+    border-radius: 22px;
+  }
+
+  .auth-visual-inner {
+    height: 155px;
+    padding: 10px;
+  }
+
+  .hamster-hero-img {
+    max-height: 135px;
+    max-width: 160px;
+  }
+
+  .auth-split-form-col {
+    padding: 22px 16px 26px 16px;
+  }
+
+  .auth-main-title {
+    font-size: 1.55rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.82rem;
+  }
+
+  /* Prevent auto-zoom on mobile safari by ensuring >= 16px */
+  .auth-clean-input,
+  .modal-clean-input,
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  .btn-auth-submit {
+    padding: 13px 18px;
+    font-size: 0.95rem;
+  }
+
+  .ticket-greeting {
+    font-size: 1.25rem;
+  }
+
+  .ticket-badge-box .ticket-number {
+    font-size: 2rem;
+  }
+
+  .wish-card {
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+
+  .wish-title {
+    font-size: 1.05rem;
+  }
+
+  .empty-box {
+    padding: 36px 18px;
+  }
+
+  .draw-title {
+    font-size: 1.4rem;
+  }
+
+  .spinning-number-display {
+    font-size: 2.5rem;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-dialog {
+    padding: 20px 16px;
+    border-radius: 20px;
+    max-height: 92dvh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  /* Stack modal footer action buttons */
+  .modal-dialog form > div[style*="justify-content: flex-end"],
+  .modal-dialog div[style*="justify-content: flex-end"] {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-dialog form > div[style*="justify-content: flex-end"] button,
+  .modal-dialog div[style*="justify-content: flex-end"] button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-box {
+    padding: 12px 10px;
+    border-radius: 14px;
+    gap: 8px;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+  }
+}
+
+/* Extra-narrow screens (<= 340px) */
+@media (max-width: 340px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-title {
+    max-width: 120px;
+    font-size: 0.88rem;
   }
 }
