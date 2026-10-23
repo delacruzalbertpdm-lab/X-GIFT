@@ -13,8 +13,10 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import UserWishlistInspectModal from './UserWishlistInspectModal';
+import AdminQuestionsModule from './AdminQuestionsModule';
 
 export default function AdminView() {
+  const [adminSubTab, setAdminSubTab] = useState('participants'); // 'participants' | 'questions'
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -92,6 +94,21 @@ export default function AdminView() {
     }
   };
 
+  const handleResetQuiz = async (userId, name) => {
+    if (!window.confirm(`Reset quiz verification for ${name}? The user will be asked to answer the questions again.`)) return;
+
+    try {
+      setActionLoading(true);
+      const res = await api.adminResetUserQuiz(userId);
+      showToast(res.message);
+      await loadAdminData();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px' }}>
@@ -122,7 +139,6 @@ export default function AdminView() {
             <Users size={26} color="var(--primary-rose)" />
             <span>Admin Monitoring Center</span>
           </h1>
-
         </div>
 
         <div className="admin-actions-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -147,6 +163,23 @@ export default function AdminView() {
         </div>
       </div>
 
+      {/* Admin Module Switcher Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: '#fbf8f5', padding: '5px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)', width: 'fit-content', flexWrap: 'wrap' }}>
+        <button
+          className={`nav-tab-btn ${adminSubTab === 'participants' ? 'active' : ''}`}
+          onClick={() => setAdminSubTab('participants')}
+        >
+          <Users size={16} />
+          <span>Participants & Matches</span>
+        </button>
+        <button
+          className={`nav-tab-btn ${adminSubTab === 'questions' ? 'active' : ''}`}
+          onClick={() => setAdminSubTab('questions')}
+        >
+          <span>🐹 Hamster Verification Questions (Module)</span>
+        </button>
+      </div>
+
       {toastMsg.text && (
         <div className={`toast-banner ${toastMsg.type === 'error' ? 'toast-error' : 'toast-success'}`}>
           {toastMsg.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
@@ -154,158 +187,203 @@ export default function AdminView() {
         </div>
       )}
 
-      {/* Stat Cards */}
-      <div className="stats-grid">
-        <div className="stat-box">
-          <div className="stat-icon" style={{ background: 'var(--primary-rose-light)', color: 'var(--primary-rose)' }}>
-            <Users size={24} />
-          </div>
-          <div>
-            <div className="stat-value">{stats.total_users}</div>
-            <div className="stat-label">Total Participants (Pool)</div>
-          </div>
-        </div>
+      {adminSubTab === 'questions' ? (
+        <AdminQuestionsModule />
+      ) : (
+        <>
+          {/* Stat Cards */}
+          <div className="stats-grid">
+            <div className="stat-box">
+              <div className="stat-icon" style={{ background: 'var(--primary-rose-light)', color: 'var(--primary-rose)' }}>
+                <Users size={24} />
+              </div>
+              <div>
+                <div className="stat-value">{stats.total_users}</div>
+                <div className="stat-label">Total Participants (Pool)</div>
+              </div>
+            </div>
 
-        <div className="stat-box">
-          <div className="stat-icon" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold)' }}>
-            <Gift size={24} />
-          </div>
-          <div>
-            <div className="stat-value">{stats.total_wishlists}</div>
-            <div className="stat-label">Total Wishlist Items</div>
-          </div>
-        </div>
+            <div className="stat-box">
+              <div className="stat-icon" style={{ background: 'var(--accent-gold-light)', color: 'var(--accent-gold)' }}>
+                <Gift size={24} />
+              </div>
+              <div>
+                <div className="stat-value">{stats.total_wishlists}</div>
+                <div className="stat-label">Total Wishlist Items</div>
+              </div>
+            </div>
 
-        <div className="stat-box">
-          <div className="stat-icon" style={{ background: 'var(--primary-emerald-light)', color: 'var(--primary-emerald)' }}>
-            <CheckCircle2 size={24} />
-          </div>
-          <div>
-            <div className="stat-value">{stats.matched_count}</div>
-            <div className="stat-label">Matched / Drawn</div>
-          </div>
-        </div>
+            <div className="stat-box">
+              <div className="stat-icon" style={{ background: 'var(--primary-emerald-light)', color: 'var(--primary-emerald)' }}>
+                <CheckCircle2 size={24} />
+              </div>
+              <div>
+                <div className="stat-value">{stats.matched_count}</div>
+                <div className="stat-label">Matched / Drawn</div>
+              </div>
+            </div>
 
-        <div className="stat-box">
-          <div className="stat-icon" style={{ background: 'var(--accent-purple-light)', color: 'var(--accent-purple)' }}>
-            <AlertCircle size={24} />
+            <div className="stat-box">
+              <div className="stat-icon" style={{ background: 'var(--accent-purple-light)', color: 'var(--accent-purple)' }}>
+                <AlertCircle size={24} />
+              </div>
+              <div>
+                <div className="stat-value">{stats.unmatched_count}</div>
+                <div className="stat-label">Pending / Unmatched</div>
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="stat-value">{stats.unmatched_count}</div>
-            <div className="stat-label">Pending / Unmatched</div>
+
+          {/* Search Bar */}
+          <div className="admin-search-wrap">
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type="text"
+                className="admin-search-input"
+                placeholder="Search by name, @username, or #number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search size={18} className="admin-search-icon" />
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Search Bar */}
-      <div className="admin-search-wrap">
-        <div style={{ position: 'relative', width: '100%' }}>
-          <input
-            type="text"
-            className="admin-search-input"
-            placeholder="Search by name, @username, or #number..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search size={18} className="admin-search-icon" />
-        </div>
-      </div>
-
-      {/* Participants Table */}
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Lucky #</th>
-              <th>Participant</th>
-              <th>Username</th>
-              <th>Wishlist Items</th>
-              <th>Giving Gift To (Drawn)</th>
-              <th>Receiving From</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                  No participants matched your search.
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <span className="badge-number">#{p.assigned_number}</span>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
-                      {p.display_name || p.username}
-                      {p.is_staff && (
-                        <span style={{ marginLeft: '6px', fontSize: '0.7rem', background: 'var(--primary-rose-light)', color: 'var(--primary-rose-text)', border: '1px solid var(--primary-rose-border)', padding: '2px 6px', borderRadius: '4px' }}>
-                          ADMIN
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ color: 'var(--text-muted)' }}>@{p.username}</td>
-                  <td>
-                    <button
-                      className="btn-secondary"
-                      style={{ padding: '4px 10px', fontSize: '0.8rem', gap: '6px' }}
-                      onClick={() => setSelectedParticipant(p)}
-                    >
-                      <Eye size={14} />
-                      <span>{p.wishlist?.length || 0} wish{(p.wishlist?.length || 0) !== 1 ? 'es' : ''}</span>
-                    </button>
-                  </td>
-                  <td>
-                    {p.drawn_user_number ? (
-                      <span className="badge-drawn">
-                        🎁 #{p.drawn_user_number} ({p.drawn_user_name})
-                      </span>
-                    ) : (
-                      <span className="badge-unpaired">Not drawn yet</span>
-                    )}
-                  </td>
-                  <td>
-                    {p.drawn_by_user_number ? (
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-body)', fontWeight: '600' }}>
-                        #{p.drawn_by_user_number} ({p.drawn_by_user_name})
-                      </span>
-                    ) : (
-                      <span className="badge-unpaired">No giver yet</span>
-                    )}
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'inline-flex', gap: '6px' }}>
-                      {p.drawn_user_number && (
+          {/* Participants Table */}
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Lucky #</th>
+                  <th>Participant</th>
+                  <th>Username</th>
+                  <th>Hamster Status</th>
+                  <th>Wishlist Items</th>
+                  <th>Giving Gift To (Drawn)</th>
+                  <th>Receiving From</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                      No participants matched your search.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((p) => (
+                    <tr key={p.id}>
+                      <td>
+                        <span className="badge-number">#{p.assigned_number}</span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                          {p.display_name || p.username}
+                          {p.is_staff && (
+                            <span style={{ marginLeft: '6px', fontSize: '0.7rem', background: 'var(--primary-rose-light)', color: 'var(--primary-rose-text)', border: '1px solid var(--primary-rose-border)', padding: '2px 6px', borderRadius: '4px' }}>
+                              ADMIN
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ color: 'var(--text-muted)' }}>@{p.username}</td>
+                      <td>
+                        {p.is_staff ? (
+                          <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--primary-rose)' }}>ADMIN</span>
+                        ) : p.quiz_completed ? (
+                          p.is_verified_true_hamster ? (
+                            <span className="badge-drawn" title={`Score: ${p.quiz_score}/${p.quiz_total}`}>
+                              👑 True Hamster ({p.quiz_score}/{p.quiz_total})
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                background: '#fef2f2',
+                                color: '#991b1b',
+                                border: '1px solid #fecdd3',
+                                fontWeight: '800',
+                                padding: '3px 9px',
+                                borderRadius: '9999px',
+                                fontSize: '0.8rem',
+                              }}
+                              title={`Score: ${p.quiz_score}/${p.quiz_total}`}
+                            >
+                              ❌ Not True ({p.quiz_score}/{p.quiz_total})
+                            </span>
+                          )
+                        ) : (
+                          <span className="badge-unpaired">⏳ Pending Quiz</span>
+                        )}
+                      </td>
+                      <td>
                         <button
                           className="btn-secondary"
-                          style={{ padding: '6px', fontSize: '0.75rem' }}
-                          title="Reset Match for this participant"
-                          onClick={() => handleResetMatches(p.id)}
+                          style={{ padding: '4px 10px', fontSize: '0.8rem', gap: '6px' }}
+                          onClick={() => setSelectedParticipant(p)}
                         >
-                          <RotateCcw size={14} />
+                          <Eye size={14} />
+                          <span>{p.wishlist?.length || 0} wish{(p.wishlist?.length || 0) !== 1 ? 'es' : ''}</span>
                         </button>
-                      )}
-                      {!p.is_staff && (
-                        <button
-                          className="btn-icon-danger"
-                          title="Delete participant"
-                          onClick={() => handleDeleteUser(p.id, p.display_name)}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </td>
+                      <td>
+                        {p.drawn_user_number ? (
+                          <span className="badge-drawn">
+                            🎁 #{p.drawn_user_number} ({p.drawn_user_name})
+                          </span>
+                        ) : (
+                          <span className="badge-unpaired">Not drawn yet</span>
+                        )}
+                      </td>
+                      <td>
+                        {p.drawn_by_user_number ? (
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-body)', fontWeight: '600' }}>
+                            #{p.drawn_by_user_number} ({p.drawn_by_user_name})
+                          </span>
+                        ) : (
+                          <span className="badge-unpaired">No giver yet</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                          {!p.is_staff && p.quiz_completed && (
+                            <button
+                              className="btn-secondary"
+                              style={{ padding: '6px 8px', fontSize: '0.72rem', color: 'var(--primary-rose)' }}
+                              title="Reset Hamster Quiz Verification (let user retake test)"
+                              onClick={() => handleResetQuiz(p.id, p.display_name || p.username)}
+                            >
+                              Reset Quiz
+                            </button>
+                          )}
+                          {p.drawn_user_number && (
+                            <button
+                              className="btn-secondary"
+                              style={{ padding: '6px', fontSize: '0.75rem' }}
+                              title="Reset Match for this participant"
+                              onClick={() => handleResetMatches(p.id)}
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          )}
+                          {!p.is_staff && (
+                            <button
+                              className="btn-icon-danger"
+                              title="Delete participant"
+                              onClick={() => handleDeleteUser(p.id, p.display_name)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {/* Inspect Wishlist Modal */}
       <UserWishlistInspectModal

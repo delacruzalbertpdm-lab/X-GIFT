@@ -41,6 +41,21 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }) {
           <div className="user-badge-chip">
             <span className="user-lucky-tag">#{user.assigned_number}</span>
             <span className="user-name-text">{user.display_name || user.username}</span>
+            {user.quiz_completed && (
+              <span
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: '800',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  background: user.is_verified_true_hamster ? '#ecfdf5' : '#fef2f2',
+                  color: user.is_verified_true_hamster ? '#065f46' : '#991b1b',
+                  border: `1px solid ${user.is_verified_true_hamster ? '#a7f3d0' : '#fecdd3'}`,
+                }}
+              >
+                {user.is_verified_true_hamster ? '👑 True Hamster' : '❌ Not True Hamster'}
+              </span>
+            )}
           </div>
         )}
 

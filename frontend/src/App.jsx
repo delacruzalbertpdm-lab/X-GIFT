@@ -5,6 +5,7 @@ import WishlistView from './components/WishlistView';
 import LuckyDrawView from './components/LuckyDrawView';
 import AdminView from './components/AdminView';
 import AuthModal from './components/AuthModal';
+import HamsterQuizModal from './components/HamsterQuizModal';
 import { api, getAuthToken, removeAuthToken } from './api';
 import { RefreshCw } from 'lucide-react';
 
@@ -109,6 +110,11 @@ export default function App() {
 
   if (!currentUser) {
     return <AuthModal onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // Gate participant entrance until they take the Hamster Verification Quiz
+  if (!currentUser.is_staff && !currentUser.quiz_completed) {
+    return <HamsterQuizModal user={currentUser} onQuizComplete={fetchAppData} />;
   }
 
   return (

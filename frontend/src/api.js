@@ -21,7 +21,23 @@ const request = async (endpoint, options = {}) => {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMsg = data?.error || data?.detail || (typeof data === 'object' ? Object.values(data).flat().join(', ') : 'Something went wrong');
+    let errorMsg = 'Something went wrong';
+    if (data?.error) {
+      errorMsg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+    } else if (data?.detail) {
+      errorMsg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+    } else if (data && typeof data === 'object') {
+      try {
+        const values = Object.values(data).flat();
+        if (values.length > 0) {
+          errorMsg = values.join(', ');
+        }
+      } catch (e) {
+        errorMsg = 'Error processing request';
+      }
+    } else if (response.statusText) {
+      errorMsg = `Server error (${response.status}: ${response.statusText})`;
+    }
     throw new Error(errorMsg);
   }
 
@@ -60,6 +76,13 @@ export const api = {
     method: 'POST',
   }),
 
+  // Hamster Verification Quiz
+  getQuizQuestions: () => request('/quiz/questions/'),
+  submitQuiz: (answers) => request('/quiz/submit/', {
+    method: 'POST',
+    body: JSON.stringify({ answers }),
+  }),
+
   // Admin
   getAdminOverview: () => request('/admin/overview/'),
   adminAutoMatchAll: () => request('/admin/auto-match-all/', {
@@ -71,5 +94,20 @@ export const api = {
   }),
   adminDeleteUser: (userId) => request(`/admin/users/${userId}/`, {
     method: 'DELETE',
+  }),
+  adminGetQuestions: () => request('/admin/questions/'),
+  adminCreateQuestion: (data) => request('/admin/questions/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  adminUpdateQuestion: (id, data) => request(`/admin/questions/${id}/`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  adminDeleteQuestion: (id) => request(`/admin/questions/${id}/`, {
+    method: 'DELETE',
+  }),
+  adminResetUserQuiz: (userId) => request(`/admin/users/${userId}/reset-quiz/`, {
+    method: 'POST',
   }),
 };

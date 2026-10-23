@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from gifts.models import UserProfile, WishlistItem, SystemSetting
+from gifts.models import UserProfile, WishlistItem, SystemSetting, VerificationQuestion
 
 
 class Command(BaseCommand):
@@ -105,5 +105,44 @@ class Command(BaseCommand):
                     )
 
             self.stdout.write(self.style.SUCCESS(f"Participant ready: {u.username} (Number #{u.profile.assigned_number}) with {u.wishlist_items.count()} wishes"))
+
+        # 4. Seed default Hamster Verification Questions
+        sample_questions = [
+            {
+                'question_text': 'Ano ang opisyal na paboritong meryenda at trademark ng La Familia Hamster Corp?',
+                'option_a': '🌻 Sunflower Seeds & Carrots',
+                'option_b': '🥩 Wagyu Beef & Caviar',
+                'option_c': '🥤 Protein Shake & Kale',
+                'option_d': '☕ Kape lang sapat na',
+                'correct_option': 'A',
+                'explanation': 'Ang tunay na Hamster ay loyal sa sunflower seeds!',
+            },
+            {
+                'question_text': 'Bakit tinawag na "La Familia De Hamster Corporation" ang ating grupo?',
+                'option_a': '🐹 Dahil solid, masaya, at nagkakaisa ang pamilya na parang mga cute na hamsters',
+                'option_b': '🏢 Dahil korporasyon talaga tayo sa Makati Stock Exchange',
+                'option_c': '🎡 Mahilig tumakbo sa hamster wheel tuwing overtime',
+                'option_d': '🤷 Walang may alam',
+                'correct_option': 'A',
+                'explanation': 'Dahil pamilya tayo at solid ang samahan!',
+            },
+            {
+                'question_text': 'Ano ang golden rule sa ating Secret Santa Gift Exchange?',
+                'option_a': '🎁 Magbigay mula sa puso at sundin ang wishlist ng iyong nabunot!',
+                'option_b': '🍬 Balat ng kendi ang iregalo',
+                'option_c': '🧦 Regalong lumang medyas',
+                'option_d': '🏃 Tumakbo at wag magpakita sa exchange day',
+                'correct_option': 'A',
+                'explanation': 'Always spread joy and thoughtful gifts!',
+            },
+        ]
+
+        for q_data in sample_questions:
+            q, created = VerificationQuestion.objects.get_or_create(
+                question_text=q_data['question_text'],
+                defaults=q_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created verification question: {q.question_text[:40]}..."))
 
         self.stdout.write(self.style.SUCCESS('Seeding demo data completed successfully!'))

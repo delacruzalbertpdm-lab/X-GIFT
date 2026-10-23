@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import UserProfile, WishlistItem, SystemSetting
+from .models import UserProfile, WishlistItem, SystemSetting, VerificationQuestion
 
 
 class WishlistItemSerializer(serializers.ModelSerializer):
@@ -37,6 +37,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'drawn_user_assigned_number',
             'drawn_user_name',
             'wishlist_count',
+            'quiz_completed',
+            'is_verified_true_hamster',
+            'quiz_score',
+            'quiz_total',
             'created_at',
         ]
 
@@ -131,8 +135,17 @@ class AdminUserOverviewSerializer(serializers.ModelSerializer):
             'drawn_user_name',
             'drawn_by_user_number',
             'drawn_by_user_name',
+            'quiz_completed',
+            'is_verified_true_hamster',
+            'quiz_score',
+            'quiz_total',
             'wishlist',
         ]
+
+    quiz_completed = serializers.BooleanField(source='profile.quiz_completed', default=False, read_only=True)
+    is_verified_true_hamster = serializers.BooleanField(source='profile.is_verified_true_hamster', default=False, read_only=True)
+    quiz_score = serializers.IntegerField(source='profile.quiz_score', default=0, read_only=True)
+    quiz_total = serializers.IntegerField(source='profile.quiz_total', default=0, read_only=True)
 
     def get_assigned_number(self, obj):
         return obj.profile.assigned_number if hasattr(obj, 'profile') else None
@@ -168,3 +181,30 @@ class AdminUserOverviewSerializer(serializers.ModelSerializer):
 
     def get_wishlist(self, obj):
         return WishlistItemSerializer(obj.wishlist_items.all(), many=True).data
+
+
+class VerificationQuestionPublicSerializer(serializers.ModelSerializer):
+    """Public version shown to participants without giving away the correct answer."""
+    class Meta:
+        model = VerificationQuestion
+        fields = ['id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d']
+
+
+class VerificationQuestionAdminSerializer(serializers.ModelSerializer):
+    """Full question details for admin management."""
+    class Meta:
+        model = VerificationQuestion
+        fields = [
+            'id',
+            'question_text',
+            'option_a',
+            'option_b',
+            'option_c',
+            'option_d',
+            'correct_option',
+            'explanation',
+            'is_active',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

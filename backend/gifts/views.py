@@ -9,13 +9,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import UserProfile, WishlistItem, SystemSetting
+from .models import UserProfile, WishlistItem, SystemSetting, VerificationQuestion
 from .serializers import (
     RegisterSerializer,
     UserProfileSerializer,
     WishlistItemSerializer,
     DrawnUserRecipientSerializer,
-    AdminUserOverviewSerializer
+    AdminUserOverviewSerializer,
+    VerificationQuestionPublicSerializer,
+    VerificationQuestionAdminSerializer,
 )
 
 
@@ -304,3 +306,85 @@ class AdminDeleteUserView(APIView):
             return Response({'message': 'Participant successfully deleted.'})
         except User.DoesNotExist:
             return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# --- Hamster Verification Quiz Views ---
+
+class QuizQuestionsView(APIView):
+    """Returns active quiz questions for participants to prove they are true Hamster Corp members."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        questions = VerificationQuestion.objects.filter(is_active=True)
+        serializer = VerificationQuestionPublicSerializer(questions, many=True)
+        return Response({
+            'questions': serializer.data,
+            'quiz_completed': getattr(request.user.profile, 'quiz_completed', False),
+            'is_verified_true_hamster': getattr(request.user.profile, 'is_verified_true_hamster', False),
+            'quiz_score': getattr(request.user.profile, 'quiz_score', 0),
+            'quiz_total': getattr(request.user.profile, 'quiz_total', 0),
+        })
+
+
+class QuizSubmitView(APIView):
+    """Evaluates answers and records whether participant passed or failed."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        answers = request.data.get('answers', {})
+        active_questions = VerificationQuestion.objects.filter(is_active=True)
+        total = active_questions.count()
+        score = 0
+
+        for q in active_questions:
+            # Handle both string and int keys in answers dict
+            ans = str(answers.get(str(q.id), answers.get(q.id, ''))).strip().upper()
+            if ans and ans == q.correct_option.strip().upper():
+                score += 1
+
+        # Verified True Hamster if all questions answered correctly (or if no questions exist)
+        is_verified = (score == total) if total > 0 else True
+
+        profile = request.user.profile
+        profile.quiz_completed = True
+        profile.is_verified_true_hamster = is_verified
+        profile.quiz_score = score
+        profile.quiz_total = total
+        profile.save()
+
+        if is_verified:
+            msg = "Certified True La Familia Hamster Corp Member! 🐹👑✨"
+        else:
+            msg = "You're not true La Familia Hamster Corp 🐹❌"
+
+        return Response({
+            'quiz_completed': True,
+            'is_verified_true_hamster': is_verified,
+            'quiz_score': score,
+            'quiz_total': total,
+            'message': msg,
+        })
+
+
+class AdminQuestionViewSet(viewsets.ModelViewSet):
+    """Admin CRUD management for Hamster Verification Quiz questions."""
+    permission_classes = [permissions.IsAdminUser]
+    queryset = VerificationQuestion.objects.all()
+    serializer_class = VerificationQuestionAdminSerializer
+
+
+class AdminResetUserQuizView(APIView):
+    """Admin can reset a user's quiz so they can retake the verification test."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, user_id):
+        profile = UserProfile.objects.filter(user_id=user_id).first()
+        if not profile:
+            return Response({'error': 'User profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        profile.quiz_completed = False
+        profile.is_verified_true_hamster = False
+        profile.quiz_score = 0
+        profile.quiz_total = 0
+        profile.save()
+        return Response({'message': f'Quiz verification reset for user #{profile.assigned_number}.'})
