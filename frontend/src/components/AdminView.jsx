@@ -70,8 +70,10 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
   };
 
   useEffect(() => {
-    loadAdminData();
-  }, []);
+    if (currentTab === 'admin_participants' || !['admin_batches', 'admin_questions'].includes(currentTab)) {
+      loadAdminData();
+    }
+  }, [currentTab]);
 
   const handleBatchChange = async (batchId) => {
     setSelectedBatchId(batchId);
@@ -212,6 +214,45 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
     });
   };
 
+  // If viewing Event Batches module, render AdminBatchModule exclusively
+  if (currentTab === 'admin_batches') {
+    return (
+      <div>
+        {toastMsg.text && (
+          <div className={`toast-banner ${toastMsg.type === 'error' ? 'toast-error' : 'toast-success'}`}>
+            {toastMsg.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+            <span>{toastMsg.text}</span>
+          </div>
+        )}
+        <AdminBatchModule onShowToast={showToast} />
+        <ConfirmModal
+          {...confirmState}
+          onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+        />
+      </div>
+    );
+  }
+
+  // If viewing Hamster Verification module, render AdminQuestionsModule exclusively
+  if (currentTab === 'admin_questions') {
+    return (
+      <div>
+        {toastMsg.text && (
+          <div className={`toast-banner ${toastMsg.type === 'error' ? 'toast-error' : 'toast-success'}`}>
+            {toastMsg.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+            <span>{toastMsg.text}</span>
+          </div>
+        )}
+        <AdminQuestionsModule />
+        <ConfirmModal
+          {...confirmState}
+          onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+        />
+      </div>
+    );
+  }
+
+  // The code below is strictly for the Participants & Pool Monitoring module
   if (loading) {
     return (
       <SmoothLoader
@@ -289,14 +330,8 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
         </div>
       )}
 
-      {currentTab === 'admin_batches' ? (
-        <AdminBatchModule onShowToast={showToast} />
-      ) : currentTab === 'admin_questions' ? (
-        <AdminQuestionsModule />
-      ) : (
-        <>
-          {/* Active Event Dropdown Filter Card */}
-          <div
+      {/* Active Event Dropdown Filter Card */}
+      <div
             style={{
               background: '#ffffff',
               borderRadius: '16px',
@@ -672,8 +707,6 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </tbody>
             </table>
           </div>
-        </>
-      )}
 
       {/* Inspect Wishlist Modal */}
       <UserWishlistInspectModal
