@@ -110,11 +110,11 @@ class GiftBatchSerializer(serializers.ModelSerializer):
         participant = obj.participants.filter(user=request.user).first()
         if participant and participant.drawn_user:
             recipient = participant.drawn_user
+            assigned_number = getattr(recipient.profile, 'assigned_number', None) if hasattr(recipient, 'profile') else None
             wishlist = WishlistItem.objects.filter(user=recipient, batch=obj)
             return {
                 'id': recipient.id,
-                'assigned_number': getattr(recipient.profile, 'assigned_number', None) if hasattr(recipient, 'profile') else None,
-                'display_name': recipient.profile.display_name or recipient.get_full_name() or recipient.username if hasattr(recipient, 'profile') else recipient.username,
+                'assigned_number': assigned_number,
                 'wishlist': WishlistItemSerializer(wishlist, many=True).data,
                 'matched_at': participant.drawn_at,
             }
@@ -161,8 +161,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return None
 
     def get_drawn_user_name(self, obj):
-        if obj.drawn_user and hasattr(obj.drawn_user, 'profile'):
-            return obj.drawn_user.profile.display_name or obj.drawn_user.get_full_name() or obj.drawn_user.username
+        # Hidden so participant only knows their lucky number
         return None
 
     def get_wishlist_count(self, obj):
@@ -172,22 +171,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class DrawnUserRecipientSerializer(serializers.ModelSerializer):
     """Details of the drawn user and their wishlist shown to the giver."""
     assigned_number = serializers.SerializerMethodField()
-    display_name = serializers.SerializerMethodField()
     wishlist = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'assigned_number', 'display_name', 'wishlist']
+        fields = ['id', 'assigned_number', 'wishlist']
 
     def get_assigned_number(self, obj):
         if hasattr(obj, 'profile'):
             return obj.profile.assigned_number
         return None
-
-    def get_display_name(self, obj):
-        if hasattr(obj, 'profile'):
-            return obj.profile.display_name or obj.get_full_name() or obj.username
-        return obj.username
 
     def get_wishlist(self, obj):
         items = obj.wishlist_items.all()

@@ -82,7 +82,7 @@ export default function WishlistView({
 
   const handleCopyPartnerWishlist = (recipient) => {
     if (!recipient || !recipient.wishlist) return;
-    const text = `🎁 Recipient #${recipient.assigned_number} (${recipient.display_name}) Wishlist:\n` +
+    const text = `🎁 Recipient #${recipient.assigned_number} Wishlist:\n` +
       recipient.wishlist
         .map((w, i) => `${i + 1}. ${w.title} [${w.price_range || 'Flexible'}] ${w.item_url ? '- ' + w.item_url : ''}`)
         .join('\n');
@@ -263,10 +263,10 @@ export default function WishlistView({
                   🎉 Your Assigned Exchange Gift Partner
                 </span>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)', marginTop: '2px' }}>
-                  {matchedRecipient.display_name}
+                  Lucky Number #{matchedRecipient.assigned_number}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem' }}>
-                  Participant #{matchedRecipient.assigned_number} in {currentBatch?.title}
+                  Secret Match in {currentBatch?.title}
                 </p>
               </div>
             </div>

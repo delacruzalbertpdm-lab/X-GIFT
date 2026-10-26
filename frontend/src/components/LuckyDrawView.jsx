@@ -67,7 +67,7 @@ export default function LuckyDrawView({
 
   const handleCopyWishlist = (recipient) => {
     if (!recipient || !recipient.wishlist) return;
-    const text = `🎁 Recipient #${recipient.assigned_number} (${recipient.display_name}) Wishlist:\n` +
+    const text = `🎁 Recipient #${recipient.assigned_number} Wishlist:\n` +
       recipient.wishlist.map((w, i) => `${i + 1}. ${w.title} [${w.price_range || 'Flexible'}] ${w.item_url ? '- ' + w.item_url : ''}`).join('\n');
     
     navigator.clipboard.writeText(text);
@@ -88,7 +88,7 @@ export default function LuckyDrawView({
               </div>
               <div>
                 <span className="result-name-label">You Picked / Drawn Recipient</span>
-                <h2 className="result-name">{recipient.display_name}</h2>
+                <h2 className="result-name">Lucky Number #{recipient.assigned_number}</h2>
               </div>
             </div>
 
