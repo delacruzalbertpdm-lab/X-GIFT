@@ -20,11 +20,24 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { api } from '../api';
+import ConfirmModal from './ConfirmModal';
 
 export default function AdminBatchModule({ onShowToast }) {
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Custom Confirm/Alert Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'primary',
+    isAlert: false,
+    onConfirm: () => {},
+  });
 
   // Create / Edit Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,7 +102,14 @@ export default function AdminBatchModule({ onShowToast }) {
   const handleSaveBatch = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert('Please enter a batch title.');
+      setConfirmState({
+        isOpen: true,
+        title: 'Title Required',
+        message: 'Please provide a title for this gift exchange batch event.',
+        confirmText: 'Got It',
+        isAlert: true,
+        type: 'warning',
+      });
       return;
     }
 
@@ -111,58 +131,77 @@ export default function AdminBatchModule({ onShowToast }) {
     }
   };
 
-  const handleDeleteBatch = async (batch) => {
-    if (!window.confirm(`Are you sure you want to delete "${batch.title}"? All associated participations in this batch will be removed.`)) {
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await api.adminDeleteBatch(batch.id);
-      if (onShowToast) onShowToast(`Batch "${batch.title}" deleted.`);
-      await loadBatches();
-    } catch (err) {
-      if (onShowToast) onShowToast(err.message || 'Failed to delete batch.', 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleDeleteBatch = (batch) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Event Batch?',
+      message: `Are you sure you want to delete "${batch.title}"?\n\nAll participant registrations in this batch will be permanently removed.`,
+      confirmText: 'Yes, Delete Batch',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          await api.adminDeleteBatch(batch.id);
+          if (onShowToast) onShowToast(`Batch "${batch.title}" deleted.`);
+          await loadBatches();
+        } catch (err) {
+          if (onShowToast) onShowToast(err.message || 'Failed to delete batch.', 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   // Bulk matching triggered by admin for a specific batch
-  const handleMatchBatch = async (batch) => {
-    if (!window.confirm(
-      `🎲 Run Auto-Match for "${batch.title}"?\n\nThis will simultaneously pair all ${batch.participants_count} registered participants in a fair Secret Santa loop with zero self-picks.`
-    )) {
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      const res = await api.adminMatchBatch(batch.id);
-      if (onShowToast) onShowToast(res.message);
-      await loadBatches();
-    } catch (err) {
-      if (onShowToast) onShowToast(err.message || 'Failed to match participants.', 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleMatchBatch = (batch) => {
+    setConfirmState({
+      isOpen: true,
+      title: '🎲 Run Simultaneous Auto-Match?',
+      message: `Are you ready to auto-match all ${batch.participants_count} registered participants in "${batch.title}"?\n\nEveryone will be paired simultaneously in a fair Secret Santa loop with zero self-picks!`,
+      confirmText: 'Yes, Auto-Match Now',
+      cancelText: 'Cancel',
+      type: 'match',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await api.adminMatchBatch(batch.id);
+          if (onShowToast) onShowToast(res.message);
+          await loadBatches();
+        } catch (err) {
+          if (onShowToast) onShowToast(err.message || 'Failed to match participants.', 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
-  const handleResetBatchMatches = async (batch) => {
-    if (!window.confirm(`Reset matches for "${batch.title}"? Participants will return to waiting state.`)) {
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      const res = await api.adminResetBatchMatches(batch.id);
-      if (onShowToast) onShowToast(res.message);
-      await loadBatches();
-    } catch (err) {
-      if (onShowToast) onShowToast(err.message || 'Failed to reset matches.', 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleResetBatchMatches = (batch) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Reset Batch Matches?',
+      message: `Reset matches for "${batch.title}"?\n\nParticipants will return to the waiting state until you auto-match again.`,
+      confirmText: 'Yes, Reset Matches',
+      cancelText: 'Cancel',
+      type: 'reset',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await api.adminResetBatchMatches(batch.id);
+          if (onShowToast) onShowToast(res.message);
+          await loadBatches();
+        } catch (err) {
+          if (onShowToast) onShowToast(err.message || 'Failed to reset matches.', 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   // Inspect participants modal
@@ -456,13 +495,13 @@ export default function AdminBatchModule({ onShowToast }) {
 
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
             <div className="modal-header">
               <h2 className="modal-title">
                 {editingBatch ? 'Edit Event Batch' : 'Create New Event Batch'}
               </h2>
-              <button className="btn-icon" onClick={() => setIsModalOpen(false)}>
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
@@ -550,9 +589,9 @@ export default function AdminBatchModule({ onShowToast }) {
 
       {/* INSPECT PARTICIPANTS MODAL */}
       {inspectModalOpen && (
-        <div className="modal-backdrop" onClick={() => setInspectModalOpen(false)}>
+        <div className="modal-overlay" onClick={() => setInspectModalOpen(false)}>
           <div
-            className="modal-card"
+            className="modal-dialog"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '750px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
           >
@@ -565,7 +604,7 @@ export default function AdminBatchModule({ onShowToast }) {
                   {participantsList.length} members joined • Inspect assigned Secret Santa matches
                 </p>
               </div>
-              <button className="btn-icon" onClick={() => setInspectModalOpen(false)}>
+              <button className="modal-close" onClick={() => setInspectModalOpen(false)}>
                 <X size={20} />
               </button>
             </div>
@@ -666,6 +705,12 @@ export default function AdminBatchModule({ onShowToast }) {
           </div>
         </div>
       )}
+
+      {/* CUSTOM CONFIRM / ALERT MODAL */}
+      <ConfirmModal
+        {...confirmState}
+        onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

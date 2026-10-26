@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle2, AlertCircle, HelpCircle, X, Check } from 'lucide-react';
 import { api } from '../api';
+import ConfirmModal from './ConfirmModal';
 
 export default function AdminQuestionsModule() {
   const [questions, setQuestions] = useState([]);
@@ -9,6 +10,18 @@ export default function AdminQuestionsModule() {
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ text: '', type: '' });
+
+  // Custom Confirm/Alert Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'primary',
+    isAlert: false,
+    onConfirm: () => {},
+  });
 
   const [formData, setFormData] = useState({
     question_text: '',
@@ -72,17 +85,25 @@ export default function AdminQuestionsModule() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id, text) => {
-    if (!window.confirm(`Sigurado ka bang nais mong tanggalin ang tanong na: "${text.substring(0, 40)}..."?`)) {
-      return;
-    }
-    try {
-      await api.adminDeleteQuestion(id);
-      showToast('Question deleted successfully!');
-      loadQuestions();
-    } catch (err) {
-      showToast(err.message || 'Failed to delete question', 'error');
-    }
+  const handleDelete = (id, text) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Question?',
+      message: `Sigurado ka bang nais mong tanggalin ang tanong na:\n\n"${text.substring(0, 70)}..."?`,
+      confirmText: 'Yes, Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await api.adminDeleteQuestion(id);
+          showToast('Question deleted successfully!');
+          loadQuestions();
+        } catch (err) {
+          showToast(err.message || 'Failed to delete question', 'error');
+        }
+      },
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -402,6 +423,12 @@ export default function AdminQuestionsModule() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal
+        {...confirmState}
+        onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

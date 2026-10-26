@@ -18,6 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import WishlistModal from './WishlistModal';
+import ConfirmModal from './ConfirmModal';
 
 export default function WishlistView({
   items = [],
@@ -30,6 +31,18 @@ export default function WishlistView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  // Custom Confirm Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'primary',
+    isAlert: false,
+    onConfirm: () => {},
+  });
 
   const handleEditClick = (item) => {
     setEditingItem(item);
@@ -50,6 +63,21 @@ export default function WishlistView({
         batch: currentBatch?.id || null,
       });
     }
+  };
+
+  const handleDeleteItemClick = (item) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Remove Wishlist Item?',
+      message: `Are you sure you want to remove "${item.title}" from your wishlist?`,
+      confirmText: 'Yes, Remove',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        await onDeleteItem(item.id);
+      },
+    });
   };
 
   const handleCopyPartnerWishlist = (recipient) => {
@@ -509,7 +537,7 @@ export default function WishlistView({
                   </button>
                   <button
                     className="btn-icon-danger"
-                    onClick={() => onDeleteItem(item.id)}
+                    onClick={() => handleDeleteItemClick(item)}
                     title="Delete Item"
                   >
                     <Trash2 size={16} />
@@ -526,6 +554,12 @@ export default function WishlistView({
         onClose={() => setIsModalOpen(false)}
         onSave={handleModalSave}
         editingItem={editingItem}
+      />
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal
+        {...confirmState}
+        onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

@@ -15,6 +15,7 @@ import { api } from '../api';
 import UserWishlistInspectModal from './UserWishlistInspectModal';
 import AdminQuestionsModule from './AdminQuestionsModule';
 import AdminBatchModule from './AdminBatchModule';
+import ConfirmModal from './ConfirmModal';
 
 export default function AdminView({ currentTab = 'admin_batches' }) {
   const [data, setData] = useState(null);
@@ -23,6 +24,18 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [toastMsg, setToastMsg] = useState({ text: '', type: '' });
+
+  // Custom Confirm/Alert Modal State
+  const [confirmState, setConfirmState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'primary',
+    isAlert: false,
+    onConfirm: () => {},
+  });
 
   const loadAdminData = async () => {
     try {
@@ -45,68 +58,103 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
     setTimeout(() => setToastMsg({ text: '', type: '' }), 4000);
   };
 
-  const handleAutoMatch = async () => {
-    if (!window.confirm('Are you sure you want to automatically shuffle and match all participants in a fair Secret Santa circle?')) {
-      return;
-    }
-    try {
-      setActionLoading(true);
-      const res = await api.adminAutoMatchAll();
-      showToast(res.message);
-      await loadAdminData();
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleAutoMatch = () => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Auto-Match All Participants?',
+      message: 'Are you sure you want to automatically shuffle and match all participants in a fair Secret Santa circle?',
+      confirmText: 'Yes, Auto-Match All',
+      cancelText: 'Cancel',
+      type: 'match',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await api.adminAutoMatchAll();
+          showToast(res.message);
+          await loadAdminData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
-  const handleResetMatches = async (userId = null) => {
-    const confirmText = userId
-      ? 'Reset the drawn match for this participant?'
-      : 'Reset ALL gift matches for every participant?';
-    if (!window.confirm(confirmText)) return;
-
-    try {
-      setActionLoading(true);
-      const res = await api.adminResetMatches(userId);
-      showToast(res.message);
-      await loadAdminData();
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleResetMatches = (userId = null) => {
+    const isSingle = Boolean(userId);
+    setConfirmState({
+      isOpen: true,
+      title: isSingle ? 'Reset Participant Match?' : 'Reset All Matches?',
+      message: isSingle
+        ? 'Reset the drawn match for this participant?'
+        : 'Are you sure you want to reset ALL gift matches for every participant in the pool?',
+      confirmText: 'Yes, Reset',
+      cancelText: 'Cancel',
+      type: 'reset',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await api.adminResetMatches(userId);
+          showToast(res.message);
+          await loadAdminData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
-  const handleDeleteUser = async (userId, name) => {
-    if (!window.confirm(`Are you sure you want to delete participant ${name}?`)) return;
-
-    try {
-      setActionLoading(true);
-      const res = await api.adminDeleteUser(userId);
-      showToast(res.message);
-      await loadAdminData();
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleDeleteUser = (userId, name) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Participant?',
+      message: `Are you sure you want to permanently delete participant "${name}"?\n\nThis will remove their profile, wishlist items, and any draw connections.`,
+      confirmText: 'Yes, Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await api.adminDeleteUser(userId);
+          showToast(res.message);
+          await loadAdminData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
-  const handleResetQuiz = async (userId, name) => {
-    if (!window.confirm(`Reset quiz verification for ${name}? The user will be asked to answer the questions again.`)) return;
-
-    try {
-      setActionLoading(true);
-      const res = await api.adminResetUserQuiz(userId);
-      showToast(res.message);
-      await loadAdminData();
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setActionLoading(false);
-    }
+  const handleResetQuiz = (userId, name) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Reset Quiz Verification?',
+      message: `Reset quiz verification for "${name}"?\n\nThe user will be prompted to retake the verification test upon their next access.`,
+      confirmText: 'Yes, Reset Quiz',
+      cancelText: 'Cancel',
+      type: 'warning',
+      onConfirm: async () => {
+        setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        try {
+          setActionLoading(true);
+          const res = await api.adminResetUserQuiz(userId);
+          showToast(res.message);
+          await loadAdminData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -375,6 +423,12 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
         isOpen={Boolean(selectedParticipant)}
         onClose={() => setSelectedParticipant(null)}
         participant={selectedParticipant}
+      />
+
+      {/* Reusable Confirmation Modal */}
+      <ConfirmModal
+        {...confirmState}
+        onClose={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

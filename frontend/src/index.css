@@ -1177,30 +1177,46 @@ input::placeholder, textarea::placeholder {
   color: var(--text-main);
 }
 
-/* Modal Dialog */
-.modal-overlay {
+/* Modal Dialog & Backdrop */
+.modal-overlay,
+.modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(58, 38, 30, 0.45);
+  background: rgba(38, 26, 22, 0.58);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000;
   padding: 20px;
   animation: fadeIn 0.15s ease-out;
 }
 
-.modal-dialog {
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-dialog,
+.modal-card {
   background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  max-width: 520px;
+  max-width: 540px;
   width: 100%;
-  padding: 32px 30px;
-  box-shadow: 0 30px 70px rgba(58, 38, 30, 0.25);
+  padding: 30px;
+  box-shadow: 0 30px 75px rgba(58, 38, 30, 0.3);
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-header {
@@ -1214,7 +1230,7 @@ input::placeholder, textarea::placeholder {
 
 .modal-title {
   font-family: var(--font-heading);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--text-main);
 }
@@ -1227,11 +1243,39 @@ input::placeholder, textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
   color: var(--text-main);
   background: #ebd9c8;
+}
+
+/* Danger Button for destructive modal actions */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #dc2626;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.92rem;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .form-group {
@@ -1246,18 +1290,21 @@ input::placeholder, textarea::placeholder {
   margin-bottom: 6px;
 }
 
+.form-input,
 .modal-clean-input {
   background: #fbfbfc;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 13px 16px;
+  padding: 12px 16px;
   font-size: 0.95rem;
   color: var(--text-main);
   width: 100%;
   transition: all 0.2s ease;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+  outline: none;
 }
 
+.form-input:focus,
 .modal-clean-input:focus {
   border-color: var(--primary-rose);
   box-shadow: 0 0 0 3px rgba(134, 87, 100, 0.16);
