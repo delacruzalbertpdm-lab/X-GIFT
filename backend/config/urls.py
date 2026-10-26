@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.views.static import serve
+from django.views.generic import RedirectView
 from django.http import HttpResponse, FileResponse
 
 FRONTEND_DIST = settings.BASE_DIR.parent / 'frontend' / 'dist'
@@ -24,6 +25,9 @@ def serve_react_app(request, path=""):
     )
 
 urlpatterns = [
+    # Convenience redirects in case the user navigates to /admin/admin
+    path('admin/admin/', RedirectView.as_view(url='/admin/', permanent=False)),
+    path('admin/admin', RedirectView.as_view(url='/admin/', permanent=False)),
     path('admin/', admin.site.urls),
     path('api/', include('gifts.urls')),
     re_path(r'^assets/(?P<path>.*)$', serve, {'document_root': FRONTEND_DIST / 'assets'}),

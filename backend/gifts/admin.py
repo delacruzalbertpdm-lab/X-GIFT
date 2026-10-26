@@ -1,25 +1,47 @@
 from django.contrib import admin
-from .models import UserProfile, WishlistItem, SystemSetting
+from .models import (
+    UserProfile,
+    WishlistItem,
+    SystemSetting,
+    VerificationQuestion,
+    GiftBatch,
+    BatchParticipant,
+)
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('assigned_number', 'user', 'display_name', 'drawn_user_display', 'drawn_at', 'created_at')
+    list_display = ('assigned_number', 'user', 'display_name', 'quiz_completed', 'is_verified_true_hamster', 'created_at')
     search_fields = ('assigned_number', 'user__username', 'display_name')
-    list_filter = ('created_at',)
+    list_filter = ('quiz_completed', 'is_verified_true_hamster', 'created_at')
 
-    def drawn_user_display(self, obj):
-        if obj.drawn_user and hasattr(obj.drawn_user, 'profile'):
-            return f"#{obj.drawn_user.profile.assigned_number} ({obj.drawn_user.username})"
-        return "-"
-    drawn_user_display.short_description = "Drawn Recipient"
+
+@admin.register(GiftBatch)
+class GiftBatchAdmin(admin.ModelAdmin):
+    list_display = ('title', 'budget_range', 'target_date', 'status', 'created_by', 'created_at')
+    list_filter = ('status', 'target_date', 'created_at')
+    search_fields = ('title', 'description')
+
+
+@admin.register(BatchParticipant)
+class BatchParticipantAdmin(admin.ModelAdmin):
+    list_display = ('batch', 'user', 'drawn_at', 'joined_at')
+    list_filter = ('batch', 'joined_at')
+    search_fields = ('user__username', 'batch__title')
 
 
 @admin.register(WishlistItem)
 class WishlistItemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'priority', 'price_range', 'created_at')
+    list_display = ('title', 'user', 'batch', 'priority', 'price_range', 'created_at')
     search_fields = ('title', 'user__username', 'description')
-    list_filter = ('priority', 'created_at')
+    list_filter = ('batch', 'priority', 'created_at')
+
+
+@admin.register(VerificationQuestion)
+class VerificationQuestionAdmin(admin.ModelAdmin):
+    list_display = ('question_text', 'correct_option', 'is_active', 'created_at')
+    list_filter = ('is_active', 'correct_option')
+    search_fields = ('question_text', 'explanation')
 
 
 @admin.register(SystemSetting)
