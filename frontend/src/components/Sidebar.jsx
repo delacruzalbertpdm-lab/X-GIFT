@@ -135,9 +135,9 @@ export default function Sidebar({
 
         {/* Navigation Section */}
         <nav className="apple-nav-group">
-          {user?.is_staff && (
+          {user?.is_staff ? (
             <>
-              <span className="apple-nav-caption">Admin Management</span>
+              <span className="apple-nav-caption">Admin Portal</span>
 
               <button
                 className={`apple-nav-link ${activeTab === 'admin_batches' ? 'active' : ''}`}
@@ -173,40 +173,38 @@ export default function Sidebar({
                 <span className="apple-nav-text">Quiz Questions</span>
                 <span className="apple-nav-badge-pill">Verify</span>
               </button>
+            </>
+          ) : (
+            <>
+              <span className="apple-nav-caption">Workspace</span>
 
-              <div className="apple-sidebar-divider" style={{ margin: '14px 0' }} />
+              <button
+                className={`apple-nav-link ${activeTab === 'events' ? 'active' : ''}`}
+                onClick={() => handleNavClick('events')}
+              >
+                <div className="apple-nav-indicator" />
+                <div className="apple-nav-icon">
+                  <Layers size={17} strokeWidth={2} />
+                </div>
+                <span className="apple-nav-text">Event Batches</span>
+                <span className="apple-nav-badge-pill">Join</span>
+              </button>
+
+              <button
+                className={`apple-nav-link ${activeTab === 'wishlist' ? 'active' : ''}`}
+                onClick={() => handleNavClick('wishlist')}
+              >
+                <div className="apple-nav-indicator" />
+                <div className="apple-nav-icon">
+                  <Gift size={17} strokeWidth={2} />
+                </div>
+                <span className="apple-nav-text">Wishlist & Match</span>
+                {wishlistCount > 0 && (
+                  <span className="apple-nav-badge">{wishlistCount}</span>
+                )}
+              </button>
             </>
           )}
-
-          <span className="apple-nav-caption">
-            {user?.is_staff ? 'My Participant Workspace' : 'Workspace'}
-          </span>
-
-          <button
-            className={`apple-nav-link ${activeTab === 'events' ? 'active' : ''}`}
-            onClick={() => handleNavClick('events')}
-          >
-            <div className="apple-nav-indicator" />
-            <div className="apple-nav-icon">
-              <Sparkles size={17} strokeWidth={2} />
-            </div>
-            <span className="apple-nav-text">{user?.is_staff ? 'Join Events' : 'Event Batches'}</span>
-            <span className="apple-nav-badge-pill">Join</span>
-          </button>
-
-          <button
-            className={`apple-nav-link ${activeTab === 'wishlist' ? 'active' : ''}`}
-            onClick={() => handleNavClick('wishlist')}
-          >
-            <div className="apple-nav-indicator" />
-            <div className="apple-nav-icon">
-              <Gift size={17} strokeWidth={2} />
-            </div>
-            <span className="apple-nav-text">{user?.is_staff ? 'My Wishlist & Match' : 'Wishlist & Match'}</span>
-            {wishlistCount > 0 && (
-              <span className="apple-nav-badge">{wishlistCount}</span>
-            )}
-          </button>
         </nav>
 
         {/* Footer / Sign Out */}

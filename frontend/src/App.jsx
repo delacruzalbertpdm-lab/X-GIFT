@@ -189,36 +189,36 @@ export default function App() {
 
       <div className="app-main-viewport">
         <main className="main-content">
-          {/* Official Participant Pass */}
-          {['events', 'wishlist'].includes(activeTab) && (
-            <HeroTicket user={currentUser} />
+          {/* Participant Views (Strictly for non-staff participants) */}
+          {!currentUser.is_staff && (
+            <>
+              <HeroTicket user={currentUser} />
+
+              {activeTab === 'events' && (
+                <BatchSelectView
+                  batches={batches}
+                  currentBatch={currentBatch}
+                  onSelectBatch={handleSelectBatch}
+                  onJoinBatch={handleJoinBatch}
+                  onRefresh={handleRefreshBatches}
+                />
+              )}
+
+              {activeTab === 'wishlist' && (
+                <WishlistView
+                  items={wishlistItems}
+                  currentBatch={currentBatch}
+                  onAddItem={handleAddItem}
+                  onUpdateItem={handleUpdateItem}
+                  onDeleteItem={handleDeleteItem}
+                  onSwitchEvent={() => setActiveTab('events')}
+                />
+              )}
+            </>
           )}
 
-          {/* Participant Tab 1: Event Batches Selection */}
-          {activeTab === 'events' && (
-            <BatchSelectView
-              batches={batches}
-              currentBatch={currentBatch}
-              onSelectBatch={handleSelectBatch}
-              onJoinBatch={handleJoinBatch}
-              onRefresh={handleRefreshBatches}
-            />
-          )}
-
-          {/* Participant Tab 2: Wishlist & Matched Partner */}
-          {activeTab === 'wishlist' && (
-            <WishlistView
-              items={wishlistItems}
-              currentBatch={currentBatch}
-              onAddItem={handleAddItem}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
-              onSwitchEvent={() => setActiveTab('events')}
-            />
-          )}
-
-          {/* Admin Tabs: Batches, Participants, Questions */}
-          {currentUser.is_staff && ['admin_batches', 'admin_participants', 'admin_questions', 'admin'].includes(activeTab) && (
+          {/* Admin Management Views */}
+          {currentUser.is_staff && (
             <AdminView currentTab={activeTab} />
           )}
         </main>

@@ -114,6 +114,9 @@ class GiftBatchViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):
+        if request.user.is_staff:
+            return Response({'error': 'Admin accounts are in system management mode and do not participate in gift events.'}, status=status.HTTP_400_BAD_REQUEST)
+
         batch = self.get_object()
         if batch.status != 'open':
             return Response({'error': 'This event is no longer open for registration.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -131,10 +134,10 @@ class GiftBatchViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def match(self, request, pk=None):
         batch = self.get_object()
-        participants = list(batch.participants.select_related('user', 'user__profile').all())
+        participants = list(batch.participants.filter(user__is_staff=False).select_related('user', 'user__profile').all())
         if len(participants) < 2:
             return Response(
-                {'error': f'Need at least 2 participants in "{batch.title}" to match. Currently only {len(participants)} joined.'},
+                {'error': f'Need at least 2 non-admin participants in "{batch.title}" to match. Currently only {len(participants)} joined.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -322,8 +325,8 @@ class AdminOverviewView(APIView):
             selected_batch = GiftBatch.objects.first()
 
         if selected_batch:
-            # Batch-scoped participants
-            batch_participants = selected_batch.participants.select_related(
+            # Batch-scoped participants (exclude staff since admin does not participate in exchange)
+            batch_participants = selected_batch.participants.filter(user__is_staff=False).select_related(
                 'user', 'user__profile', 'drawn_user', 'drawn_user__profile'
             ).all()
 
