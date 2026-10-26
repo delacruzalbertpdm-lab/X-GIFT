@@ -330,18 +330,12 @@ class AdminOverviewView(APIView):
                 u = bp.user
                 profile = getattr(u, 'profile', None)
 
-                # Who gave to this user in this batch?
-                giver_bp = selected_batch.participants.filter(drawn_user=u).select_related('user', 'user__profile').first()
-                drawn_by_user_number = getattr(giver_bp.user.profile, 'assigned_number', None) if (giver_bp and hasattr(giver_bp.user, 'profile')) else None
-                drawn_by_user_name = giver_bp.user.profile.display_name if (giver_bp and hasattr(giver_bp.user, 'profile')) else (giver_bp.user.username if giver_bp else None)
+                # Wishlist items count for this batch (details hidden to preserve secret Santa surprise)
+                wishlist_count = WishlistItem.objects.filter(user=u, batch=selected_batch).count()
 
-                # Who does this user give to in this batch?
-                drawn_user_number = getattr(bp.drawn_user.profile, 'assigned_number', None) if (bp.drawn_user and hasattr(bp.drawn_user, 'profile')) else None
-                drawn_user_name = bp.drawn_user.profile.display_name if (bp.drawn_user and hasattr(bp.drawn_user, 'profile')) else (bp.drawn_user.username if bp.drawn_user else None)
-
-                # Wishlist items for this batch
-                items = WishlistItem.objects.filter(user=u, batch=selected_batch)
-                wishlist_data = WishlistItemSerializer(items, many=True).data
+                # Pairing status indicators (identities hidden so admin participant is not spoiled)
+                is_matched = bp.drawn_user_id is not None
+                has_giver = selected_batch.participants.filter(drawn_user=u).exists()
 
                 users_data.append({
                     'id': u.id,
@@ -353,15 +347,13 @@ class AdminOverviewView(APIView):
                     'date_joined': u.date_joined,
                     'assigned_number': getattr(profile, 'assigned_number', None) if profile else None,
                     'display_name': getattr(profile, 'display_name', '') or u.get_full_name() or u.username if profile else u.username,
-                    'drawn_user_number': drawn_user_number,
-                    'drawn_user_name': drawn_user_name,
-                    'drawn_by_user_number': drawn_by_user_number,
-                    'drawn_by_user_name': drawn_by_user_name,
+                    'is_matched': is_matched,
+                    'has_giver': has_giver,
+                    'wishlist_count': wishlist_count,
                     'quiz_completed': getattr(profile, 'quiz_completed', False) if profile else False,
                     'is_verified_true_hamster': getattr(profile, 'is_verified_true_hamster', False) if profile else False,
                     'quiz_score': getattr(profile, 'quiz_score', 0) if profile else 0,
                     'quiz_total': getattr(profile, 'quiz_total', 0) if profile else 0,
-                    'wishlist': wishlist_data,
                 })
 
             total_users = batch_participants.count()

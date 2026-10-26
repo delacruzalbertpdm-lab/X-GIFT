@@ -630,7 +630,7 @@ export default function AdminBatchModule({ onShowToast }) {
                         <th style={{ padding: '10px 12px' }}>Participant</th>
                         <th style={{ padding: '10px 12px' }}>Lucky #</th>
                         <th style={{ padding: '10px 12px' }}>Wishlists</th>
-                        <th style={{ padding: '10px 12px' }}>Giving Gift To (Match)</th>
+                        <th style={{ padding: '10px 12px' }}>Exchange Match Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -681,14 +681,28 @@ export default function AdminBatchModule({ onShowToast }) {
                                   fontSize: '0.82rem',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '4px'
+                                  gap: '5px'
                                 }}
                               >
-                                🎁 #{p.drawn_user_assigned_number} ({p.drawn_user_name})
+                                <CheckCircle2 size={13} />
+                                <span>Matched (Secret)</span>
                               </span>
                             ) : (
-                              <span style={{ color: 'var(--text-faint)', fontStyle: 'italic' }}>
-                                Waiting for match
+                              <span
+                                style={{
+                                  background: 'var(--bg-card-subtle)',
+                                  color: 'var(--text-muted)',
+                                  padding: '4px 10px',
+                                  borderRadius: 'var(--radius-full)',
+                                  fontWeight: '600',
+                                  fontSize: '0.82rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px'
+                                }}
+                              >
+                                <Clock size={13} />
+                                <span>Pending Match</span>
                               </span>
                             )}
                           </td>

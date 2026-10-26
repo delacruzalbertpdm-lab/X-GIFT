@@ -189,12 +189,13 @@ export default function App() {
 
       <div className="app-main-viewport">
         <main className="main-content">
-          {!currentUser.is_staff && (
+          {/* Official Participant Pass */}
+          {['events', 'wishlist'].includes(activeTab) && (
             <HeroTicket user={currentUser} />
           )}
 
-          {/* User Tab 1: Event Batches Selection */}
-          {!currentUser.is_staff && activeTab === 'events' && (
+          {/* Participant Tab 1: Event Batches Selection */}
+          {activeTab === 'events' && (
             <BatchSelectView
               batches={batches}
               currentBatch={currentBatch}
@@ -204,8 +205,8 @@ export default function App() {
             />
           )}
 
-          {/* User Tab 2: Wishlist & Matched Partner */}
-          {!currentUser.is_staff && activeTab === 'wishlist' && (
+          {/* Participant Tab 2: Wishlist & Matched Partner */}
+          {activeTab === 'wishlist' && (
             <WishlistView
               items={wishlistItems}
               currentBatch={currentBatch}
@@ -217,7 +218,7 @@ export default function App() {
           )}
 
           {/* Admin Tabs: Batches, Participants, Questions */}
-          {currentUser.is_staff && (
+          {currentUser.is_staff && ['admin_batches', 'admin_participants', 'admin_questions', 'admin'].includes(activeTab) && (
             <AdminView currentTab={activeTab} />
           )}
         </main>

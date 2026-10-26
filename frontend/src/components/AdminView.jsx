@@ -7,17 +7,16 @@ import {
   Search,
   Shuffle,
   RotateCcw,
-  Eye,
   Trash2,
   RefreshCw,
   Layers,
   Tag,
   Calendar,
   Sparkles,
-  Filter
+  Filter,
+  Clock
 } from 'lucide-react';
 import { api } from '../api';
-import UserWishlistInspectModal from './UserWishlistInspectModal';
 import AdminQuestionsModule from './AdminQuestionsModule';
 import AdminBatchModule from './AdminBatchModule';
 import ConfirmModal from './ConfirmModal';
@@ -28,7 +27,6 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [toastMsg, setToastMsg] = useState({ text: '', type: '' });
 
   // Event Batch Filtering Dropdown State
@@ -260,8 +258,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
     return (
       u.display_name?.toLowerCase().includes(q) ||
       u.username?.toLowerCase().includes(q) ||
-      String(u.assigned_number).includes(q) ||
-      (u.drawn_user_number && String(u.drawn_user_number).includes(q))
+      String(u.assigned_number).includes(q)
     );
   });
 
@@ -561,16 +558,15 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                   <th>Participant</th>
                   <th>Username</th>
                   <th>Hamster Status</th>
-                  <th>Wishlist Items</th>
-                  <th>Giving Gift To (Drawn)</th>
-                  <th>Receiving From</th>
+                  <th>Wishlist Status</th>
+                  <th>Exchange Match Status</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                       {searchQuery
                         ? `No participants matched "${searchQuery}".`
                         : selectedBatch
@@ -624,31 +620,60 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                         )}
                       </td>
                       <td>
-                        <button
-                          className="btn-secondary"
-                          style={{ padding: '4px 10px', fontSize: '0.8rem', gap: '6px' }}
-                          onClick={() => setSelectedParticipant(p)}
-                        >
-                          <Eye size={14} />
-                          <span>{p.wishlist?.length || 0} wish{(p.wishlist?.length || 0) !== 1 ? 'es' : ''}</span>
-                        </button>
-                      </td>
-                      <td>
-                        {p.drawn_user_number ? (
-                          <span className="badge-drawn">
-                            🎁 #{p.drawn_user_number} ({p.drawn_user_name})
+                        {p.wishlist_count > 0 ? (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '0.8rem',
+                              fontWeight: '700',
+                              color: 'var(--primary-emerald-text)',
+                              background: 'var(--primary-emerald-light)',
+                              padding: '4px 10px',
+                              borderRadius: 'var(--radius-full)',
+                              border: '1px solid #bbf7d0'
+                            }}
+                          >
+                            <Gift size={13} />
+                            <span>{p.wishlist_count} item{p.wishlist_count !== 1 ? 's' : ''} added</span>
                           </span>
                         ) : (
-                          <span className="badge-unpaired">Not drawn yet</span>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '0.8rem',
+                              fontWeight: '600',
+                              color: 'var(--text-muted)',
+                              background: '#f8fafc',
+                              border: '1px solid var(--border-soft)',
+                              padding: '4px 10px',
+                              borderRadius: 'var(--radius-full)'
+                            }}
+                          >
+                            <span>No items yet</span>
+                          </span>
                         )}
                       </td>
                       <td>
-                        {p.drawn_by_user_number ? (
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-body)', fontWeight: '600' }}>
-                            #{p.drawn_by_user_number} ({p.drawn_by_user_name})
+                        {p.is_matched ? (
+                          <span
+                            className="badge-drawn"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <CheckCircle2 size={13} />
+                            <span>Matched (Secret)</span>
                           </span>
                         ) : (
-                          <span className="badge-unpaired">No giver yet</span>
+                          <span
+                            className="badge-unpaired"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            <Clock size={13} />
+                            <span>Not drawn yet</span>
+                          </span>
                         )}
                       </td>
                       <td style={{ textAlign: 'right' }}>
@@ -663,7 +688,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                               Reset Quiz
                             </button>
                           )}
-                          {p.drawn_user_number && (
+                          {p.is_matched && (
                             <button
                               className="btn-secondary"
                               style={{ padding: '6px', fontSize: '0.75rem' }}
@@ -690,13 +715,6 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </tbody>
             </table>
           </div>
-
-      {/* Inspect Wishlist Modal */}
-      <UserWishlistInspectModal
-        isOpen={Boolean(selectedParticipant)}
-        onClose={() => setSelectedParticipant(null)}
-        participant={selectedParticipant}
-      />
 
       {/* Reusable Confirmation Modal */}
       <ConfirmModal

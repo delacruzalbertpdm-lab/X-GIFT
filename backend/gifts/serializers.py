@@ -53,13 +53,11 @@ class BatchParticipantSerializer(serializers.ModelSerializer):
         return obj.drawn_user is not None
 
     def get_drawn_user_assigned_number(self, obj):
-        if obj.drawn_user and hasattr(obj.drawn_user, 'profile'):
-            return obj.drawn_user.profile.assigned_number
+        # Hidden to preserve Secret Santa surprise for admin and participants
         return None
 
     def get_drawn_user_name(self, obj):
-        if obj.drawn_user and hasattr(obj.drawn_user, 'profile'):
-            return obj.drawn_user.profile.display_name or obj.drawn_user.get_full_name() or obj.drawn_user.username
+        # Hidden to preserve Secret Santa surprise for admin and participants
         return None
 
 
@@ -223,14 +221,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class AdminUserOverviewSerializer(serializers.ModelSerializer):
-    """Comprehensive detail for admin to monitor all participants."""
+    """Admin participant monitoring serializer with secret match identities hidden."""
     assigned_number = serializers.SerializerMethodField()
     display_name = serializers.SerializerMethodField()
-    drawn_user_number = serializers.SerializerMethodField()
-    drawn_user_name = serializers.SerializerMethodField()
-    drawn_by_user_number = serializers.SerializerMethodField()
-    drawn_by_user_name = serializers.SerializerMethodField()
-    wishlist = serializers.SerializerMethodField()
+    is_matched = serializers.SerializerMethodField()
+    has_giver = serializers.SerializerMethodField()
+    wishlist_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -244,15 +240,13 @@ class AdminUserOverviewSerializer(serializers.ModelSerializer):
             'date_joined',
             'assigned_number',
             'display_name',
-            'drawn_user_number',
-            'drawn_user_name',
-            'drawn_by_user_number',
-            'drawn_by_user_name',
+            'is_matched',
+            'has_giver',
+            'wishlist_count',
             'quiz_completed',
             'is_verified_true_hamster',
             'quiz_score',
             'quiz_total',
-            'wishlist',
         ]
 
     quiz_completed = serializers.BooleanField(source='profile.quiz_completed', default=False, read_only=True)
@@ -268,32 +262,14 @@ class AdminUserOverviewSerializer(serializers.ModelSerializer):
             return obj.profile.display_name or obj.get_full_name() or obj.username
         return obj.username
 
-    def get_drawn_user_number(self, obj):
-        if hasattr(obj, 'profile') and obj.profile.drawn_user:
-            return getattr(obj.profile.drawn_user.profile, 'assigned_number', None)
-        return None
+    def get_is_matched(self, obj):
+        return hasattr(obj, 'profile') and obj.profile.drawn_user is not None
 
-    def get_drawn_user_name(self, obj):
-        if hasattr(obj, 'profile') and obj.profile.drawn_user:
-            target = obj.profile.drawn_user
-            return target.profile.display_name if hasattr(target, 'profile') else target.username
-        return None
+    def get_has_giver(self, obj):
+        return obj.drawn_by_profiles.exists()
 
-    def get_drawn_by_user_number(self, obj):
-        # Who has drawn this user?
-        giver_profile = obj.drawn_by_profiles.first()
-        if giver_profile:
-            return giver_profile.assigned_number
-        return None
-
-    def get_drawn_by_user_name(self, obj):
-        giver_profile = obj.drawn_by_profiles.first()
-        if giver_profile:
-            return giver_profile.display_name or giver_profile.user.username
-        return None
-
-    def get_wishlist(self, obj):
-        return WishlistItemSerializer(obj.wishlist_items.all(), many=True).data
+    def get_wishlist_count(self, obj):
+        return obj.wishlist_items.count()
 
 
 class VerificationQuestionPublicSerializer(serializers.ModelSerializer):
