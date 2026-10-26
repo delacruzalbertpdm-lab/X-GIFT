@@ -6,6 +6,7 @@ import BatchSelectView from './components/BatchSelectView';
 import AdminView from './components/AdminView';
 import AuthModal from './components/AuthModal';
 import HamsterQuizModal from './components/HamsterQuizModal';
+import SmoothLoader from './components/SmoothLoader';
 import { api, getAuthToken, removeAuthToken } from './api';
 import { RefreshCw } from 'lucide-react';
 
@@ -155,14 +156,11 @@ export default function App() {
 
   if (initialLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <RefreshCw className="animate-spin" size={42} color="var(--primary-rose)" />
-          <p style={{ marginTop: '16px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Connecting to LA Familia De Hamster Corporation...
-          </p>
-        </div>
-      </div>
+      <SmoothLoader
+        fullScreen
+        message="Connecting to La Familia Hamster Corp"
+        subtext="Syncing gift exchange circles, events, and wishlist data..."
+      />
     );
   }
 

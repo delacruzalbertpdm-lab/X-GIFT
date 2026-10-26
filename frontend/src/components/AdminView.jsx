@@ -21,6 +21,7 @@ import UserWishlistInspectModal from './UserWishlistInspectModal';
 import AdminQuestionsModule from './AdminQuestionsModule';
 import AdminBatchModule from './AdminBatchModule';
 import ConfirmModal from './ConfirmModal';
+import SmoothLoader from './SmoothLoader';
 
 export default function AdminView({ currentTab = 'admin_batches' }) {
   const [data, setData] = useState(null);
@@ -213,10 +214,10 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px' }}>
-        <RefreshCw className="animate-spin" size={36} color="var(--primary-rose)" />
-        <p style={{ marginTop: '16px', color: 'var(--text-muted)' }}>Loading Admin Monitoring Portal...</p>
-      </div>
+      <SmoothLoader
+        message="Loading Admin Monitoring Portal"
+        subtext="Fetching live participant pool, matches, and wishlist data..."
+      />
     );
   }
 

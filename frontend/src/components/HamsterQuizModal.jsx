@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { Sparkles, AlertCircle, CheckCircle2, ShieldAlert, ArrowRight, HelpCircle } from 'lucide-react';
 import { api } from '../api';
+import SmoothLoader from './SmoothLoader';
 
 export default function HamsterQuizModal({ user, onQuizComplete }) {
   const [questions, setQuestions] = useState([]);
@@ -80,11 +81,12 @@ export default function HamsterQuizModal({ user, onQuizComplete }) {
   if (loading) {
     return (
       <div className="modal-overlay">
-        <div className="modal-dialog" style={{ textAlign: 'center', padding: '36px' }}>
-          <div className="animate-spin" style={{ display: 'inline-block', fontSize: '2rem' }}>🐹</div>
-          <p style={{ marginTop: '14px', color: 'var(--text-muted)', fontWeight: '600' }}>
-            Preparing La Familia Hamster Verification...
-          </p>
+        <div className="modal-dialog" style={{ textAlign: 'center', padding: '36px', maxWidth: '440px' }}>
+          <SmoothLoader
+            transparent
+            message="Preparing Hamster Verification"
+            subtext="Loading official questions from La Familia Hamster Corp..."
+          />
         </div>
       </div>
     );

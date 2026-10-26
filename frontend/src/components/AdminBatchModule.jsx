@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import ConfirmModal from './ConfirmModal';
+import SmoothLoader from './SmoothLoader';
 
 export default function AdminBatchModule({ onShowToast }) {
   const [batches, setBatches] = useState([]);
@@ -221,10 +222,10 @@ export default function AdminBatchModule({ onShowToast }) {
 
   if (loading) {
     return (
-      <div style={{ padding: '60px 0', textAlign: 'center' }}>
-        <RefreshCw className="animate-spin" size={32} color="var(--primary-rose)" style={{ margin: '0 auto 12px' }} />
-        <p style={{ color: 'var(--text-muted)' }}>Loading Event Batches...</p>
-      </div>
+      <SmoothLoader
+        message="Loading Event Batches"
+        subtext="Fetching all exchange gift events and participant rosters..."
+      />
     );
   }
 
@@ -611,10 +612,12 @@ export default function AdminBatchModule({ onShowToast }) {
 
             <div style={{ overflowY: 'auto', marginTop: '16px', flex: 1 }}>
               {participantsLoading ? (
-                <div style={{ padding: '40px', textAlign: 'center' }}>
-                  <RefreshCw className="animate-spin" size={28} color="var(--primary-rose)" style={{ margin: '0 auto 8px' }} />
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading participants...</p>
-                </div>
+                <SmoothLoader
+                  transparent
+                  size="sm"
+                  message="Loading participants"
+                  subtext="Fetching joined members..."
+                />
               ) : participantsList.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                   No participants have joined this batch yet.

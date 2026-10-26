@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle2, AlertCircle, HelpCircle, X, Check } from 'lucide-react';
 import { api } from '../api';
 import ConfirmModal from './ConfirmModal';
+import SmoothLoader from './SmoothLoader';
 
 export default function AdminQuestionsModule() {
   const [questions, setQuestions] = useState([]);
@@ -157,9 +158,10 @@ export default function AdminQuestionsModule() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-          Loading questions...
-        </div>
+        <SmoothLoader
+          message="Loading verification questions"
+          subtext="Preparing quiz configuration..."
+        />
       ) : questions.length === 0 ? (
         <div className="empty-box" style={{ padding: '40px 20px' }}>
           <HelpCircle size={36} color="var(--primary-rose)" />

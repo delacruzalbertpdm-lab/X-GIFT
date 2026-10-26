@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Sparkles, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import { api, setAuthToken } from '../api';
 
 export default function AuthModal({ onLoginSuccess }) {
@@ -151,11 +151,16 @@ export default function AuthModal({ onLoginSuccess }) {
               className="btn-auth-submit"
               disabled={loading || Boolean(assignedNotice)}
             >
-              {loading
-                ? 'Processing...'
-                : mode === 'login'
-                ? 'Sign in'
-                : 'Create account'}
+              {loading ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <RefreshCw className="animate-spin" size={16} />
+                  <span>Processing...</span>
+                </span>
+              ) : mode === 'login' ? (
+                'Sign in'
+              ) : (
+                'Create account'
+              )}
             </button>
           </form>
 
