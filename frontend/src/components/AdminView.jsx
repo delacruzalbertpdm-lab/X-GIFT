@@ -51,16 +51,15 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
     try {
       setLoading(true);
       const batchToQuery = targetBatchId !== undefined ? targetBatchId : selectedBatchId;
-      const res = await api.getAdminOverview(batchToQuery);
+      const res = await api.getAdminOverview(batchToQuery || null);
       setData(res);
       const batchList = res.batches || [];
       setBatches(batchList);
 
-      // Auto-select first batch if none was selected
-      if (targetBatchId === undefined && selectedBatchId === '' && batchList.length > 0) {
+      if (res.selected_batch?.id) {
+        setSelectedBatchId(res.selected_batch.id);
+      } else if (batchList.length > 0 && !selectedBatchId) {
         setSelectedBatchId(batchList[0].id);
-        const scopedRes = await api.getAdminOverview(batchList[0].id);
-        setData(scopedRes);
       }
     } catch (err) {
       setToastMsg({ text: err.message || 'Failed to load admin data.', type: 'error' });
@@ -86,32 +85,26 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
   };
 
   const handleAutoMatch = () => {
-    const isBatch = Boolean(selectedBatchId && selectedBatchId !== 'all');
-    const currentBatch = batches.find((b) => String(b.id) === String(selectedBatchId));
-    const title = isBatch && currentBatch
-      ? `Auto-Match Event: "${currentBatch.title}"?`
-      : 'Auto-Match All Participants?';
-    const message = isBatch && currentBatch
-      ? `Are you sure you want to automatically shuffle and match all participants in "${currentBatch.title}"?`
-      : 'Are you sure you want to automatically shuffle and match all participants in a fair Secret Santa circle?';
-    const confirmText = isBatch ? 'Yes, Match Event' : 'Yes, Auto-Match All';
+    const currentBatch = batches.find((b) => String(b.id) === String(selectedBatchId)) || data?.selected_batch;
+    if (!currentBatch) {
+      showToast('Please select an active event first.', 'error');
+      return;
+    }
 
     setConfirmState({
       isOpen: true,
-      title,
-      message,
-      confirmText,
+      title: `Auto-Match Event: "${currentBatch.title}"?`,
+      message: `Are you sure you want to automatically shuffle and match all participants in "${currentBatch.title}"?`,
+      confirmText: 'Yes, Match Event',
       cancelText: 'Cancel',
       type: 'match',
       onConfirm: async () => {
         setConfirmState((prev) => ({ ...prev, isOpen: false }));
         try {
           setActionLoading(true);
-          const res = isBatch
-            ? await api.adminMatchBatch(selectedBatchId)
-            : await api.adminAutoMatchAll();
+          const res = await api.adminMatchBatch(currentBatch.id);
           showToast(res.message);
-          await loadAdminData(selectedBatchId);
+          await loadAdminData(currentBatch.id);
         } catch (err) {
           showToast(err.message, 'error');
         } finally {
@@ -123,18 +116,19 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
 
   const handleResetMatches = (userId = null) => {
     const isSingle = Boolean(userId);
-    const isBatch = Boolean(!isSingle && selectedBatchId && selectedBatchId !== 'all');
-    const currentBatch = batches.find((b) => String(b.id) === String(selectedBatchId));
+    const currentBatch = batches.find((b) => String(b.id) === String(selectedBatchId)) || data?.selected_batch;
 
-    let title = 'Reset All Matches?';
-    let message = 'Are you sure you want to reset ALL gift matches for every participant in the pool?';
-    if (isSingle) {
-      title = 'Reset Participant Match?';
-      message = 'Reset the drawn match for this participant?';
-    } else if (isBatch && currentBatch) {
-      title = `Reset Matches for "${currentBatch.title}"?`;
-      message = `Are you sure you want to reset all gift matches for participants in "${currentBatch.title}"?`;
+    if (!isSingle && !currentBatch) {
+      showToast('Please select an active event first.', 'error');
+      return;
     }
+
+    const title = isSingle
+      ? 'Reset Participant Match?'
+      : `Reset Matches for "${currentBatch.title}"?`;
+    const message = isSingle
+      ? 'Reset the drawn match for this participant in this event?'
+      : `Are you sure you want to reset all gift matches for participants in "${currentBatch.title}"?`;
 
     setConfirmState({
       isOpen: true,
@@ -147,14 +141,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
         setConfirmState((prev) => ({ ...prev, isOpen: false }));
         try {
           setActionLoading(true);
-          let res;
-          if (isSingle) {
-            res = await api.adminResetMatches(userId);
-          } else if (isBatch) {
-            res = await api.adminResetBatchMatches(selectedBatchId);
-          } else {
-            res = await api.adminResetMatches(null);
-          }
+          const res = isSingle
+            ? await api.adminResetMatches(userId)
+            : await api.adminResetBatchMatches(currentBatch.id);
           showToast(res.message);
           await loadAdminData(selectedBatchId);
         } catch (err) {
@@ -265,7 +254,6 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
   const stats = data?.stats || { total_users: 0, total_wishlists: 0, matched_count: 0, unmatched_count: 0 };
   const participants = data?.users || [];
   const selectedBatch = data?.selected_batch || null;
-  const isBatchMode = Boolean(selectedBatchId && selectedBatchId !== 'all');
 
   const filteredUsers = participants.filter((u) => {
     const q = searchQuery.toLowerCase();
@@ -300,24 +288,24 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
           <button
             className="btn-primary"
             onClick={handleAutoMatch}
-            disabled={actionLoading}
-            title={isBatchMode && selectedBatch ? `Auto-Match ${selectedBatch.title}` : "Auto-Match All Participants"}
+            disabled={actionLoading || !selectedBatch}
+            title={selectedBatch ? `Auto-Match ${selectedBatch.title}` : "Auto-Match Event"}
           >
             <Shuffle size={16} />
             <span className="btn-text-desktop">
-              {isBatchMode && selectedBatch ? `Auto-Match (${selectedBatch.title})` : 'Auto-Match All'}
+              {selectedBatch ? `Auto-Match (${selectedBatch.title})` : 'Auto-Match Event'}
             </span>
           </button>
           <button
             className="btn-secondary"
             onClick={() => handleResetMatches(null)}
-            disabled={actionLoading}
+            disabled={actionLoading || !selectedBatch}
             style={{ color: '#b91c1c' }}
-            title={isBatchMode ? "Reset Matches for this Event" : "Reset All Matches"}
+            title={selectedBatch ? `Reset Matches for ${selectedBatch.title}` : "Reset Event Matches"}
           >
             <RotateCcw size={16} />
             <span className="btn-text-desktop">
-              {isBatchMode ? 'Reset Event Matches' : 'Reset'}
+              Reset Event Matches
             </span>
           </button>
         </div>
@@ -380,7 +368,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <select
                     id="admin-event-filter-select"
-                    value={selectedBatchId || 'all'}
+                    value={selectedBatchId || (batches[0]?.id || '')}
                     onChange={(e) => handleBatchChange(e.target.value)}
                     style={{
                       appearance: 'none',
@@ -398,12 +386,15 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                       boxShadow: '0 2px 6px rgba(181, 70, 90, 0.08)',
                     }}
                   >
-                    <option value="all">🌐 All Participants (Global Directory)</option>
-                    {batches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        🎁 {b.title} ({b.status === 'matched' ? 'Matched' : 'Open'})
-                      </option>
-                    ))}
+                    {batches.length === 0 ? (
+                      <option value="" disabled>No events available</option>
+                    ) : (
+                      batches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          🎁 {b.title} ({b.status === 'matched' ? 'Matched' : 'Open'})
+                        </option>
+                      ))
+                    )}
                   </select>
                   <Filter
                     size={16}
@@ -494,7 +485,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                     borderRadius: '999px',
                   }}
                 >
-                  Showing all registered system users
+                  No events created yet
                 </span>
               )}
             </div>
@@ -508,9 +499,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.total_users}</div>
-                <div className="stat-label">
-                  {isBatchMode ? 'Participants in Event' : 'Total Participants (Pool)'}
-                </div>
+                <div className="stat-label">Participants in Event</div>
               </div>
             </div>
 
@@ -520,9 +509,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.total_wishlists}</div>
-                <div className="stat-label">
-                  {isBatchMode ? 'Wishlist Items (This Event)' : 'Total Wishlist Items'}
-                </div>
+                <div className="stat-label">Wishlist Items in Event</div>
               </div>
             </div>
 
@@ -532,9 +519,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.matched_count}</div>
-                <div className="stat-label">
-                  {isBatchMode ? 'Matched in Event' : 'Matched / Drawn'}
-                </div>
+                <div className="stat-label">Matched in Event</div>
               </div>
             </div>
 
@@ -544,9 +529,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.unmatched_count}</div>
-                <div className="stat-label">
-                  {isBatchMode ? 'Pending in Event' : 'Pending / Unmatched'}
-                </div>
+                <div className="stat-label">Pending in Event</div>
               </div>
             </div>
           </div>
@@ -558,9 +541,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                 type="text"
                 className="admin-search-input"
                 placeholder={
-                  isBatchMode && selectedBatch
+                  selectedBatch
                     ? `Search participants in "${selectedBatch.title}"...`
-                    : "Search by name, @username, or #number..."
+                    : "Search participants..."
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -590,9 +573,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                     <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                       {searchQuery
                         ? `No participants matched "${searchQuery}".`
-                        : isBatchMode && selectedBatch
+                        : selectedBatch
                         ? `No participants have joined "${selectedBatch.title}" yet.`
-                        : 'No participants registered in the system.'}
+                        : 'No participants registered in this event.'}
                     </td>
                   </tr>
                 ) : (

@@ -316,6 +316,8 @@ class AdminOverviewView(APIView):
         selected_batch = None
         if batch_id and batch_id != 'all':
             selected_batch = GiftBatch.objects.filter(id=batch_id).first()
+        if not selected_batch:
+            selected_batch = GiftBatch.objects.first()
 
         if selected_batch:
             # Batch-scoped participants
@@ -375,13 +377,11 @@ class AdminOverviewView(APIView):
                 'status': selected_batch.status,
             }
         else:
-            participants = User.objects.filter(is_staff=False).select_related('profile').prefetch_related('wishlist_items', 'drawn_by_profiles')
-            users_data = AdminUserOverviewSerializer(participants, many=True).data
-
-            total_users = participants.count()
-            total_wishlists = WishlistItem.objects.filter(user__is_staff=False).count()
-            matched_count = UserProfile.objects.filter(user__is_staff=False, drawn_user__isnull=False).count()
-            unmatched_count = total_users - matched_count
+            total_users = 0
+            total_wishlists = 0
+            matched_count = 0
+            unmatched_count = 0
+            users_data = []
             batch_info = None
 
         return Response({
