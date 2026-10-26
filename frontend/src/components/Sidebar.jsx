@@ -10,7 +10,8 @@ import {
   Sparkles,
   CheckCircle2,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
+  Layers
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -141,6 +142,18 @@ export default function Sidebar({
           {!user?.is_staff ? (
             <>
               <button
+                className={`apple-nav-link ${activeTab === 'events' ? 'active' : ''}`}
+                onClick={() => handleNavClick('events')}
+              >
+                <div className="apple-nav-indicator" />
+                <div className="apple-nav-icon">
+                  <Layers size={17} strokeWidth={2} />
+                </div>
+                <span className="apple-nav-text">Event Batches</span>
+                <span className="apple-nav-badge-pill">Join</span>
+              </button>
+
+              <button
                 className={`apple-nav-link ${activeTab === 'wishlist' ? 'active' : ''}`}
                 onClick={() => handleNavClick('wishlist')}
               >
@@ -148,26 +161,26 @@ export default function Sidebar({
                 <div className="apple-nav-icon">
                   <Gift size={17} strokeWidth={2} />
                 </div>
-                <span className="apple-nav-text">Wishlist</span>
+                <span className="apple-nav-text">Wishlist & Match</span>
                 {wishlistCount > 0 && (
                   <span className="apple-nav-badge">{wishlistCount}</span>
                 )}
               </button>
-
-              <button
-                className={`apple-nav-link ${activeTab === 'draw' ? 'active' : ''}`}
-                onClick={() => handleNavClick('draw')}
-              >
-                <div className="apple-nav-indicator" />
-                <div className="apple-nav-icon">
-                  <Dice5 size={17} strokeWidth={2} />
-                </div>
-                <span className="apple-nav-text">Lucky Draw</span>
-                <span className="apple-nav-badge-pill">Spin</span>
-              </button>
             </>
           ) : (
             <>
+              <button
+                className={`apple-nav-link ${activeTab === 'admin_batches' ? 'active' : ''}`}
+                onClick={() => handleNavClick('admin_batches')}
+              >
+                <div className="apple-nav-indicator" />
+                <div className="apple-nav-icon">
+                  <Layers size={17} strokeWidth={2} />
+                </div>
+                <span className="apple-nav-text">Event Batches</span>
+                <span className="apple-nav-badge-pill">Match</span>
+              </button>
+
               <button
                 className={`apple-nav-link ${activeTab === 'admin_participants' || activeTab === 'admin' ? 'active' : ''}`}
                 onClick={() => handleNavClick('admin_participants')}
@@ -176,7 +189,7 @@ export default function Sidebar({
                 <div className="apple-nav-icon">
                   <Users size={17} strokeWidth={2} />
                 </div>
-                <span className="apple-nav-text">Participants</span>
+                <span className="apple-nav-text">All Participants</span>
               </button>
 
               <button

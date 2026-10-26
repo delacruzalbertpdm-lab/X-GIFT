@@ -14,8 +14,9 @@ import {
 import { api } from '../api';
 import UserWishlistInspectModal from './UserWishlistInspectModal';
 import AdminQuestionsModule from './AdminQuestionsModule';
+import AdminBatchModule from './AdminBatchModule';
 
-export default function AdminView({ currentTab = 'admin_participants' }) {
+export default function AdminView({ currentTab = 'admin_batches' }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -169,7 +170,9 @@ export default function AdminView({ currentTab = 'admin_participants' }) {
         </div>
       )}
 
-      {currentTab === 'admin_questions' ? (
+      {currentTab === 'admin_batches' ? (
+        <AdminBatchModule onShowToast={showToast} />
+      ) : currentTab === 'admin_questions' ? (
         <AdminQuestionsModule />
       ) : (
         <>

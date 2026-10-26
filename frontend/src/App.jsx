@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import HeroTicket from './components/HeroTicket';
 import WishlistView from './components/WishlistView';
-import LuckyDrawView from './components/LuckyDrawView';
+import BatchSelectView from './components/BatchSelectView';
 import AdminView from './components/AdminView';
 import AuthModal from './components/AuthModal';
 import HamsterQuizModal from './components/HamsterQuizModal';
@@ -11,27 +11,51 @@ import { RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('wishlist'); // 'wishlist' | 'draw' | 'admin_participants' | 'admin_questions'
+  const [activeTab, setActiveTab] = useState('events'); // 'events' | 'wishlist' | 'admin_batches' | 'admin_participants' | 'admin_questions'
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  
+  // Batches state
+  const [batches, setBatches] = useState([]);
+  const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [wishlistItems, setWishlistItems] = useState([]);
-  const [drawStatus, setDrawStatus] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
 
   const fetchAppData = async () => {
     try {
       const user = await api.getMe();
       setCurrentUser(user);
-      if (user.is_staff && (activeTab === 'wishlist' || activeTab === 'draw')) {
-        setActiveTab('admin_participants');
+
+      if (user.is_staff) {
+        if (!activeTab.startsWith('admin_')) {
+          setActiveTab('admin_batches');
+        }
+        return;
       }
 
-      const [items, draw] = await Promise.all([
-        api.getWishlist(),
-        api.getDrawStatus(),
-      ]);
+      // Fetch Batches for participant
+      const batchList = await api.getBatches();
+      setBatches(batchList || []);
 
-      setWishlistItems(items);
-      setDrawStatus(draw);
+      // Check if user has already joined any batch
+      const joinedBatches = (batchList || []).filter((b) => b.is_joined);
+
+      let targetBatchId = selectedBatchId;
+      if (!targetBatchId && joinedBatches.length > 0) {
+        targetBatchId = joinedBatches[0].id;
+      }
+
+      if (targetBatchId) {
+        setSelectedBatchId(targetBatchId);
+        const items = await api.getWishlist(targetBatchId);
+        setWishlistItems(items || []);
+        // If they have a batch and were on default events, take them to their wishlist
+        if (activeTab === 'events' && joinedBatches.length > 0) {
+          setActiveTab('wishlist');
+        }
+      } else {
+        // No batch joined yet -> show events tab so they can pick/join an event
+        setActiveTab('events');
+      }
     } catch (err) {
       console.error('Session expired or error loading user:', err);
       removeAuthToken();
@@ -53,9 +77,9 @@ export default function App() {
   const handleLoginSuccess = async (user) => {
     setCurrentUser(user);
     if (user.is_staff) {
-      setActiveTab('admin_participants');
+      setActiveTab('admin_batches');
     } else {
-      setActiveTab('wishlist');
+      setActiveTab('events');
     }
     setInitialLoading(true);
     await fetchAppData();
@@ -65,17 +89,56 @@ export default function App() {
     removeAuthToken();
     setCurrentUser(null);
     setWishlistItems([]);
-    setDrawStatus(null);
+    setBatches([]);
+    setSelectedBatchId(null);
+    setActiveTab('events');
+  };
+
+  // Batch Selection & Joining
+  const handleSelectBatch = async (batch) => {
+    setSelectedBatchId(batch.id);
+    try {
+      const items = await api.getWishlist(batch.id);
+      setWishlistItems(items || []);
+    } catch (err) {
+      console.error('Error fetching wishlist for batch:', err);
+    }
     setActiveTab('wishlist');
   };
 
-  // Wishlist handlers
+  const handleJoinBatch = async (batchId) => {
+    await api.joinBatch(batchId);
+    const updatedBatches = await api.getBatches();
+    setBatches(updatedBatches || []);
+
+    const targetBatch = updatedBatches.find((b) => b.id === batchId);
+    if (targetBatch) {
+      setSelectedBatchId(targetBatch.id);
+      const items = await api.getWishlist(targetBatch.id);
+      setWishlistItems(items || []);
+      setActiveTab('wishlist');
+    }
+  };
+
+  const handleRefreshBatches = async () => {
+    const updated = await api.getBatches();
+    setBatches(updated || []);
+    if (selectedBatchId) {
+      const items = await api.getWishlist(selectedBatchId);
+      setWishlistItems(items || []);
+    }
+  };
+
+  // Wishlist handlers scoped to active batch
   const handleAddItem = async (formData) => {
-    const newItem = await api.addWishlistItem(formData);
+    const newItem = await api.addWishlistItem({
+      ...formData,
+      batch: selectedBatchId,
+    });
     setWishlistItems((prev) => [newItem, ...prev]);
-    // Refresh draw status so the system recognizes user now has items
-    const updatedDraw = await api.getDrawStatus();
-    setDrawStatus(updatedDraw);
+    // Refresh batch data to update counts
+    const updated = await api.getBatches();
+    setBatches(updated || []);
   };
 
   const handleUpdateItem = async (id, formData) => {
@@ -86,16 +149,8 @@ export default function App() {
   const handleDeleteItem = async (id) => {
     await api.deleteWishlistItem(id);
     setWishlistItems((prev) => prev.filter((item) => item.id !== id));
-    const updatedDraw = await api.getDrawStatus();
-    setDrawStatus(updatedDraw);
-  };
-
-  // Draw handlers
-  const handlePickDraw = async () => {
-    const res = await api.pickDraw();
-    const updatedDraw = await api.getDrawStatus();
-    setDrawStatus(updatedDraw);
-    return res;
+    const updated = await api.getBatches();
+    setBatches(updated || []);
   };
 
   if (initialLoading) {
@@ -120,6 +175,8 @@ export default function App() {
     return <HamsterQuizModal user={currentUser} onQuizComplete={fetchAppData} />;
   }
 
+  const currentBatch = batches.find((b) => b.id === selectedBatchId) || batches[0] || null;
+
   return (
     <div className="app-shell">
       <Sidebar
@@ -138,25 +195,30 @@ export default function App() {
             <HeroTicket user={currentUser} />
           )}
 
+          {/* User Tab 1: Event Batches Selection */}
+          {!currentUser.is_staff && activeTab === 'events' && (
+            <BatchSelectView
+              batches={batches}
+              currentBatch={currentBatch}
+              onSelectBatch={handleSelectBatch}
+              onJoinBatch={handleJoinBatch}
+              onRefresh={handleRefreshBatches}
+            />
+          )}
+
+          {/* User Tab 2: Wishlist & Matched Partner */}
           {!currentUser.is_staff && activeTab === 'wishlist' && (
             <WishlistView
               items={wishlistItems}
+              currentBatch={currentBatch}
               onAddItem={handleAddItem}
               onUpdateItem={handleUpdateItem}
               onDeleteItem={handleDeleteItem}
-              onGoToDraw={() => setActiveTab('draw')}
+              onSwitchEvent={() => setActiveTab('events')}
             />
           )}
 
-          {!currentUser.is_staff && activeTab === 'draw' && (
-            <LuckyDrawView
-              drawStatus={drawStatus}
-              wishlistCount={wishlistItems.length}
-              onPickDraw={handlePickDraw}
-              onGoToWishlist={() => setActiveTab('wishlist')}
-            />
-          )}
-
+          {/* Admin Tabs: Batches, Participants, Questions */}
           {currentUser.is_staff && (
             <AdminView currentTab={activeTab} />
           )}

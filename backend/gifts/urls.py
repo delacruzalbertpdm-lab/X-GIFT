@@ -5,6 +5,7 @@ from .views import (
     LoginView,
     CurrentUserView,
     WishlistViewSet,
+    GiftBatchViewSet,
     DrawStatusView,
     PickDrawView,
     AdminOverviewView,
@@ -19,6 +20,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'wishlist', WishlistViewSet, basename='wishlist')
+router.register(r'batches', GiftBatchViewSet, basename='batches')
 router.register(r'admin/questions', AdminQuestionViewSet, basename='admin-questions')
 
 urlpatterns = [

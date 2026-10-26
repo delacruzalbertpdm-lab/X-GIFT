@@ -57,7 +57,7 @@ export const api = {
   getMe: () => request('/auth/me/'),
 
   // Wishlist
-  getWishlist: () => request('/wishlist/'),
+  getWishlist: (batchId = null) => request(`/wishlist/${batchId ? `?batch=${batchId}` : ''}`),
   addWishlistItem: (item) => request('/wishlist/', {
     method: 'POST',
     body: JSON.stringify(item),
@@ -69,6 +69,31 @@ export const api = {
   deleteWishlistItem: (id) => request(`/wishlist/${id}/`, {
     method: 'DELETE',
   }),
+
+  // Event Batches
+  getBatches: () => request('/batches/'),
+  getBatch: (id) => request(`/batches/${id}/`),
+  joinBatch: (id) => request(`/batches/${id}/join/`, {
+    method: 'POST',
+  }),
+  adminCreateBatch: (data) => request('/batches/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  adminUpdateBatch: (id, data) => request(`/batches/${id}/`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  adminDeleteBatch: (id) => request(`/batches/${id}/`, {
+    method: 'DELETE',
+  }),
+  adminMatchBatch: (id) => request(`/batches/${id}/match/`, {
+    method: 'POST',
+  }),
+  adminResetBatchMatches: (id) => request(`/batches/${id}/reset_matches/`, {
+    method: 'POST',
+  }),
+  adminGetBatchParticipants: (id) => request(`/batches/${id}/participants/`),
 
   // Lucky Draw
   getDrawStatus: () => request('/draw/status/'),

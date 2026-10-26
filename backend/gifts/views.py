@@ -5,11 +5,11 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import status, viewsets, permissions
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import UserProfile, WishlistItem, SystemSetting, VerificationQuestion
+from .models import UserProfile, WishlistItem, SystemSetting, VerificationQuestion, GiftBatch, BatchParticipant
 from .serializers import (
     RegisterSerializer,
     UserProfileSerializer,
@@ -18,6 +18,8 @@ from .serializers import (
     AdminUserOverviewSerializer,
     VerificationQuestionPublicSerializer,
     VerificationQuestionAdminSerializer,
+    GiftBatchSerializer,
+    BatchParticipantSerializer,
 )
 
 
@@ -80,10 +82,99 @@ class WishlistViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return WishlistItem.objects.filter(user=self.request.user)
+        qs = WishlistItem.objects.filter(user=self.request.user)
+        batch_id = self.request.query_params.get('batch')
+        if batch_id:
+            qs = qs.filter(batch_id=batch_id)
+        return qs
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        batch_id = self.request.data.get('batch')
+        batch = None
+        if batch_id:
+            batch = GiftBatch.objects.filter(id=batch_id).first()
+        serializer.save(user=self.request.user, batch=batch)
+
+
+class GiftBatchViewSet(viewsets.ModelViewSet):
+    queryset = GiftBatch.objects.all()
+    serializer_class = GiftBatchSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'join']:
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = [permissions.IsAdminUser]
+        return [permission() for permission in permission_classes]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def join(self, request, pk=None):
+        batch = self.get_object()
+        if batch.status != 'open':
+            return Response({'error': 'This event is no longer open for registration.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        participant, created = BatchParticipant.objects.get_or_create(
+            batch=batch,
+            user=request.user
+        )
+        return Response({
+            'success': True,
+            'created': created,
+            'message': f'You have joined "{batch.title}"!'
+        })
+
+    @action(detail=True, methods=['post'])
+    def match(self, request, pk=None):
+        batch = self.get_object()
+        participants = list(batch.participants.select_related('user', 'user__profile').all())
+        if len(participants) < 2:
+            return Response(
+                {'error': f'Need at least 2 participants in "{batch.title}" to match. Currently only {len(participants)} joined.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Fair circular derangement: no self-picks, guaranteed closed cycle
+        random.shuffle(participants)
+        now = timezone.now()
+
+        with transaction.atomic():
+            for i in range(len(participants)):
+                giver = participants[i]
+                receiver = participants[(i + 1) % len(participants)]
+                giver.drawn_user = receiver.user
+                giver.drawn_at = now
+                giver.save()
+
+            batch.status = 'matched'
+            batch.save()
+
+        return Response({
+            'success': True,
+            'message': f'🎉 Successfully matched all {len(participants)} participants in "{batch.title}"!'
+        })
+
+    @action(detail=True, methods=['post'])
+    def reset_matches(self, request, pk=None):
+        batch = self.get_object()
+        with transaction.atomic():
+            batch.participants.update(drawn_user=None, drawn_at=None)
+            batch.status = 'open'
+            batch.save()
+
+        return Response({
+            'success': True,
+            'message': f'Matches for "{batch.title}" have been reset.'
+        })
+
+    @action(detail=True, methods=['get'])
+    def participants(self, request, pk=None):
+        batch = self.get_object()
+        participants = batch.participants.select_related('user', 'user__profile', 'drawn_user', 'drawn_user__profile').all()
+        serializer = BatchParticipantSerializer(participants, many=True)
+        return Response(serializer.data)
 
 
 class DrawStatusView(APIView):
@@ -226,6 +317,7 @@ class AdminOverviewView(APIView):
         total_wishlists = WishlistItem.objects.filter(user__is_staff=False).count()
         matched_count = UserProfile.objects.filter(user__is_staff=False, drawn_user__isnull=False).count()
         unmatched_count = total_users - matched_count
+        total_batches = GiftBatch.objects.count()
 
         return Response({
             'stats': {
@@ -233,6 +325,7 @@ class AdminOverviewView(APIView):
                 'total_wishlists': total_wishlists,
                 'matched_count': matched_count,
                 'unmatched_count': unmatched_count,
+                'total_batches': total_batches,
             },
             'users': users_data,
             'settings': {

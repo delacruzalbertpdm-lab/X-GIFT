@@ -71,6 +71,45 @@ class VerificationQuestion(models.Model):
         return self.question_text
 
 
+class GiftBatch(models.Model):
+    STATUS_CHOICES = [
+        ('open', 'Open for Registration & Wishlists'),
+        ('matched', 'Matched / Draw Completed'),
+        ('completed', 'Event Completed'),
+    ]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default='')
+    budget_range = models.CharField(max_length=100, blank=True, default='₱500 - ₱1000')
+    target_date = models.DateField(null=True, blank=True)
+    min_wishlist_items = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='created_batches')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class BatchParticipant(models.Model):
+    batch = models.ForeignKey(GiftBatch, on_delete=models.CASCADE, related_name='participants')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='batch_participations')
+    drawn_user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='drawn_in_batches')
+    drawn_at = models.DateTimeField(null=True, blank=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('batch', 'user')
+        ordering = ['joined_at']
+
+    def __str__(self):
+        return f"{self.user.username} in {self.batch.title}"
+
+
 class WishlistItem(models.Model):
     PRIORITY_CHOICES = [
         (1, 'Top Priority / Most Wanted'),
@@ -79,6 +118,13 @@ class WishlistItem(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
+    batch = models.ForeignKey(
+        GiftBatch,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='wishlist_items'
+    )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, default='')
     price_range = models.CharField(max_length=100, blank=True, default='')
