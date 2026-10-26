@@ -109,7 +109,7 @@ export const api = {
   }),
 
   // Admin
-  getAdminOverview: () => request('/admin/overview/'),
+  getAdminOverview: (batchId = null) => request(`/admin/overview/${batchId ? `?batch=${batchId}` : ''}`),
   adminAutoMatchAll: () => request('/admin/auto-match-all/', {
     method: 'POST',
   }),

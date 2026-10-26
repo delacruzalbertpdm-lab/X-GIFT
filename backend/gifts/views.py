@@ -310,14 +310,79 @@ class AdminOverviewView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
-        participants = User.objects.filter(is_staff=False).select_related('profile').prefetch_related('wishlist_items', 'drawn_by_profiles')
-        users_data = AdminUserOverviewSerializer(participants, many=True).data
+        batch_id = request.query_params.get('batch')
+        batches = list(GiftBatch.objects.all().values('id', 'title', 'budget_range', 'target_date', 'status', 'created_at'))
 
-        total_users = participants.count()
-        total_wishlists = WishlistItem.objects.filter(user__is_staff=False).count()
-        matched_count = UserProfile.objects.filter(user__is_staff=False, drawn_user__isnull=False).count()
-        unmatched_count = total_users - matched_count
-        total_batches = GiftBatch.objects.count()
+        selected_batch = None
+        if batch_id and batch_id != 'all':
+            selected_batch = GiftBatch.objects.filter(id=batch_id).first()
+
+        if selected_batch:
+            # Batch-scoped participants
+            batch_participants = selected_batch.participants.select_related(
+                'user', 'user__profile', 'drawn_user', 'drawn_user__profile'
+            ).all()
+
+            users_data = []
+            for bp in batch_participants:
+                u = bp.user
+                profile = getattr(u, 'profile', None)
+
+                # Who gave to this user in this batch?
+                giver_bp = selected_batch.participants.filter(drawn_user=u).select_related('user', 'user__profile').first()
+                drawn_by_user_number = getattr(giver_bp.user.profile, 'assigned_number', None) if (giver_bp and hasattr(giver_bp.user, 'profile')) else None
+                drawn_by_user_name = giver_bp.user.profile.display_name if (giver_bp and hasattr(giver_bp.user, 'profile')) else (giver_bp.user.username if giver_bp else None)
+
+                # Who does this user give to in this batch?
+                drawn_user_number = getattr(bp.drawn_user.profile, 'assigned_number', None) if (bp.drawn_user and hasattr(bp.drawn_user, 'profile')) else None
+                drawn_user_name = bp.drawn_user.profile.display_name if (bp.drawn_user and hasattr(bp.drawn_user, 'profile')) else (bp.drawn_user.username if bp.drawn_user else None)
+
+                # Wishlist items for this batch
+                items = WishlistItem.objects.filter(user=u, batch=selected_batch)
+                wishlist_data = WishlistItemSerializer(items, many=True).data
+
+                users_data.append({
+                    'id': u.id,
+                    'username': u.username,
+                    'first_name': u.first_name,
+                    'last_name': u.last_name,
+                    'email': u.email,
+                    'is_staff': u.is_staff,
+                    'date_joined': u.date_joined,
+                    'assigned_number': getattr(profile, 'assigned_number', None) if profile else None,
+                    'display_name': getattr(profile, 'display_name', '') or u.get_full_name() or u.username if profile else u.username,
+                    'drawn_user_number': drawn_user_number,
+                    'drawn_user_name': drawn_user_name,
+                    'drawn_by_user_number': drawn_by_user_number,
+                    'drawn_by_user_name': drawn_by_user_name,
+                    'quiz_completed': getattr(profile, 'quiz_completed', False) if profile else False,
+                    'is_verified_true_hamster': getattr(profile, 'is_verified_true_hamster', False) if profile else False,
+                    'quiz_score': getattr(profile, 'quiz_score', 0) if profile else 0,
+                    'quiz_total': getattr(profile, 'quiz_total', 0) if profile else 0,
+                    'wishlist': wishlist_data,
+                })
+
+            total_users = batch_participants.count()
+            total_wishlists = WishlistItem.objects.filter(batch=selected_batch).count()
+            matched_count = selected_batch.participants.filter(drawn_user__isnull=False).count()
+            unmatched_count = total_users - matched_count
+
+            batch_info = {
+                'id': selected_batch.id,
+                'title': selected_batch.title,
+                'budget_range': selected_batch.budget_range,
+                'target_date': selected_batch.target_date,
+                'status': selected_batch.status,
+            }
+        else:
+            participants = User.objects.filter(is_staff=False).select_related('profile').prefetch_related('wishlist_items', 'drawn_by_profiles')
+            users_data = AdminUserOverviewSerializer(participants, many=True).data
+
+            total_users = participants.count()
+            total_wishlists = WishlistItem.objects.filter(user__is_staff=False).count()
+            matched_count = UserProfile.objects.filter(user__is_staff=False, drawn_user__isnull=False).count()
+            unmatched_count = total_users - matched_count
+            batch_info = None
 
         return Response({
             'stats': {
@@ -325,9 +390,11 @@ class AdminOverviewView(APIView):
                 'total_wishlists': total_wishlists,
                 'matched_count': matched_count,
                 'unmatched_count': unmatched_count,
-                'total_batches': total_batches,
+                'total_batches': len(batches),
             },
             'users': users_data,
+            'batches': batches,
+            'selected_batch': batch_info,
             'settings': {
                 'event_name': SystemSetting.get_settings().event_name,
                 'is_draw_active': SystemSetting.get_settings().is_draw_active,

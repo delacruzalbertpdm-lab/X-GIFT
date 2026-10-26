@@ -9,7 +9,12 @@ import {
   RotateCcw,
   Eye,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Layers,
+  Tag,
+  Calendar,
+  Sparkles,
+  Filter
 } from 'lucide-react';
 import { api } from '../api';
 import UserWishlistInspectModal from './UserWishlistInspectModal';
@@ -25,6 +30,10 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
   const [selectedParticipant, setSelectedParticipant] = useState(null);
   const [toastMsg, setToastMsg] = useState({ text: '', type: '' });
 
+  // Event Batch Filtering Dropdown State
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [batches, setBatches] = useState([]);
+
   // Custom Confirm/Alert Modal State
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -37,11 +46,21 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
     onConfirm: () => {},
   });
 
-  const loadAdminData = async () => {
+  const loadAdminData = async (targetBatchId = undefined) => {
     try {
       setLoading(true);
-      const res = await api.getAdminOverview();
+      const batchToQuery = targetBatchId !== undefined ? targetBatchId : selectedBatchId;
+      const res = await api.getAdminOverview(batchToQuery);
       setData(res);
+      const batchList = res.batches || [];
+      setBatches(batchList);
+
+      // Auto-select first batch if none was selected
+      if (targetBatchId === undefined && selectedBatchId === '' && batchList.length > 0) {
+        setSelectedBatchId(batchList[0].id);
+        const scopedRes = await api.getAdminOverview(batchList[0].id);
+        setData(scopedRes);
+      }
     } catch (err) {
       setToastMsg({ text: err.message || 'Failed to load admin data.', type: 'error' });
     } finally {
@@ -53,26 +72,43 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
     loadAdminData();
   }, []);
 
+  const handleBatchChange = async (batchId) => {
+    setSelectedBatchId(batchId);
+    await loadAdminData(batchId);
+  };
+
   const showToast = (text, type = 'success') => {
     setToastMsg({ text, type });
     setTimeout(() => setToastMsg({ text: '', type: '' }), 4000);
   };
 
   const handleAutoMatch = () => {
+    const isBatch = Boolean(selectedBatchId && selectedBatchId !== 'all');
+    const currentBatch = batches.find((b) => String(b.id) === String(selectedBatchId));
+    const title = isBatch && currentBatch
+      ? `Auto-Match Event: "${currentBatch.title}"?`
+      : 'Auto-Match All Participants?';
+    const message = isBatch && currentBatch
+      ? `Are you sure you want to automatically shuffle and match all participants in "${currentBatch.title}"?`
+      : 'Are you sure you want to automatically shuffle and match all participants in a fair Secret Santa circle?';
+    const confirmText = isBatch ? 'Yes, Match Event' : 'Yes, Auto-Match All';
+
     setConfirmState({
       isOpen: true,
-      title: 'Auto-Match All Participants?',
-      message: 'Are you sure you want to automatically shuffle and match all participants in a fair Secret Santa circle?',
-      confirmText: 'Yes, Auto-Match All',
+      title,
+      message,
+      confirmText,
       cancelText: 'Cancel',
       type: 'match',
       onConfirm: async () => {
         setConfirmState((prev) => ({ ...prev, isOpen: false }));
         try {
           setActionLoading(true);
-          const res = await api.adminAutoMatchAll();
+          const res = isBatch
+            ? await api.adminMatchBatch(selectedBatchId)
+            : await api.adminAutoMatchAll();
           showToast(res.message);
-          await loadAdminData();
+          await loadAdminData(selectedBatchId);
         } catch (err) {
           showToast(err.message, 'error');
         } finally {
@@ -84,12 +120,23 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
 
   const handleResetMatches = (userId = null) => {
     const isSingle = Boolean(userId);
+    const isBatch = Boolean(!isSingle && selectedBatchId && selectedBatchId !== 'all');
+    const currentBatch = batches.find((b) => String(b.id) === String(selectedBatchId));
+
+    let title = 'Reset All Matches?';
+    let message = 'Are you sure you want to reset ALL gift matches for every participant in the pool?';
+    if (isSingle) {
+      title = 'Reset Participant Match?';
+      message = 'Reset the drawn match for this participant?';
+    } else if (isBatch && currentBatch) {
+      title = `Reset Matches for "${currentBatch.title}"?`;
+      message = `Are you sure you want to reset all gift matches for participants in "${currentBatch.title}"?`;
+    }
+
     setConfirmState({
       isOpen: true,
-      title: isSingle ? 'Reset Participant Match?' : 'Reset All Matches?',
-      message: isSingle
-        ? 'Reset the drawn match for this participant?'
-        : 'Are you sure you want to reset ALL gift matches for every participant in the pool?',
+      title,
+      message,
       confirmText: 'Yes, Reset',
       cancelText: 'Cancel',
       type: 'reset',
@@ -97,9 +144,16 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
         setConfirmState((prev) => ({ ...prev, isOpen: false }));
         try {
           setActionLoading(true);
-          const res = await api.adminResetMatches(userId);
+          let res;
+          if (isSingle) {
+            res = await api.adminResetMatches(userId);
+          } else if (isBatch) {
+            res = await api.adminResetBatchMatches(selectedBatchId);
+          } else {
+            res = await api.adminResetMatches(null);
+          }
           showToast(res.message);
-          await loadAdminData();
+          await loadAdminData(selectedBatchId);
         } catch (err) {
           showToast(err.message, 'error');
         } finally {
@@ -123,7 +177,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
           setActionLoading(true);
           const res = await api.adminDeleteUser(userId);
           showToast(res.message);
-          await loadAdminData();
+          await loadAdminData(selectedBatchId);
         } catch (err) {
           showToast(err.message, 'error');
         } finally {
@@ -147,7 +201,7 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
           setActionLoading(true);
           const res = await api.adminResetUserQuiz(userId);
           showToast(res.message);
-          await loadAdminData();
+          await loadAdminData(selectedBatchId);
         } catch (err) {
           showToast(err.message, 'error');
         } finally {
@@ -168,6 +222,8 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
 
   const stats = data?.stats || { total_users: 0, total_wishlists: 0, matched_count: 0, unmatched_count: 0 };
   const participants = data?.users || [];
+  const selectedBatch = data?.selected_batch || null;
+  const isBatchMode = Boolean(selectedBatchId && selectedBatchId !== 'all');
 
   const filteredUsers = participants.filter((u) => {
     const q = searchQuery.toLowerCase();
@@ -190,23 +246,37 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
         </div>
 
         <div className="admin-actions-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button className="btn-secondary" onClick={loadAdminData} disabled={actionLoading} title="Refresh Data">
+          <button
+            className="btn-secondary"
+            onClick={() => loadAdminData(selectedBatchId)}
+            disabled={actionLoading}
+            title="Refresh Data"
+          >
             <RefreshCw size={16} />
             <span className="btn-text-desktop">Refresh</span>
           </button>
-          <button className="btn-primary" onClick={handleAutoMatch} disabled={actionLoading} title="Auto-Match All Participants">
+          <button
+            className="btn-primary"
+            onClick={handleAutoMatch}
+            disabled={actionLoading}
+            title={isBatchMode && selectedBatch ? `Auto-Match ${selectedBatch.title}` : "Auto-Match All Participants"}
+          >
             <Shuffle size={16} />
-            <span className="btn-text-desktop">Auto-Match All</span>
+            <span className="btn-text-desktop">
+              {isBatchMode && selectedBatch ? `Auto-Match (${selectedBatch.title})` : 'Auto-Match All'}
+            </span>
           </button>
           <button
             className="btn-secondary"
             onClick={() => handleResetMatches(null)}
             disabled={actionLoading}
             style={{ color: '#b91c1c' }}
-            title="Reset All Matches"
+            title={isBatchMode ? "Reset Matches for this Event" : "Reset All Matches"}
           >
             <RotateCcw size={16} />
-            <span className="btn-text-desktop">Reset</span>
+            <span className="btn-text-desktop">
+              {isBatchMode ? 'Reset Event Matches' : 'Reset'}
+            </span>
           </button>
         </div>
       </div>
@@ -224,6 +294,176 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
         <AdminQuestionsModule />
       ) : (
         <>
+          {/* Active Event Dropdown Filter Card */}
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              padding: '16px 20px',
+              marginBottom: '20px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              border: '1.5px solid var(--border-soft)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '12px',
+                  background: 'var(--primary-rose-light)',
+                  color: 'var(--primary-rose)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Layers size={22} />
+              </div>
+              <div>
+                <label
+                  htmlFor="admin-event-filter-select"
+                  style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    color: 'var(--text-muted)',
+                    marginBottom: '4px',
+                  }}
+                >
+                  Viewing Event / Batch:
+                </label>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <select
+                    id="admin-event-filter-select"
+                    value={selectedBatchId || 'all'}
+                    onChange={(e) => handleBatchChange(e.target.value)}
+                    style={{
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      padding: '8px 36px 8px 14px',
+                      borderRadius: '10px',
+                      border: '1.5px solid var(--primary-rose)',
+                      background: '#ffffff',
+                      color: 'var(--text-main)',
+                      fontSize: '0.95rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      minWidth: '240px',
+                      boxShadow: '0 2px 6px rgba(181, 70, 90, 0.08)',
+                    }}
+                  >
+                    <option value="all">🌐 All Participants (Global Directory)</option>
+                    {batches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        🎁 {b.title} ({b.status === 'matched' ? 'Matched' : 'Open'})
+                      </option>
+                    ))}
+                  </select>
+                  <Filter
+                    size={16}
+                    color="var(--primary-rose)"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Event Meta Badges */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {selectedBatch ? (
+                <>
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: '700',
+                      padding: '5px 12px',
+                      borderRadius: '999px',
+                      background: selectedBatch.status === 'matched' ? 'var(--primary-emerald-light)' : 'var(--accent-gold-light)',
+                      color: selectedBatch.status === 'matched' ? 'var(--primary-emerald)' : 'var(--accent-gold)',
+                      border: `1px solid ${selectedBatch.status === 'matched' ? 'var(--primary-emerald)' : 'var(--accent-gold)'}`,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <Sparkles size={13} />
+                    {selectedBatch.status === 'matched' ? 'Circle Matched' : 'Open for Joining'}
+                  </span>
+
+                  {selectedBatch.budget_range && (
+                    <span
+                      style={{
+                        fontSize: '0.78rem',
+                        fontWeight: '600',
+                        padding: '5px 12px',
+                        borderRadius: '999px',
+                        background: '#f8fafc',
+                        color: 'var(--text-muted)',
+                        border: '1px solid var(--border-soft)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                      }}
+                    >
+                      <Tag size={13} />
+                      Budget: {selectedBatch.budget_range}
+                    </span>
+                  )}
+
+                  {selectedBatch.target_date && (
+                    <span
+                      style={{
+                        fontSize: '0.78rem',
+                        fontWeight: '600',
+                        padding: '5px 12px',
+                        borderRadius: '999px',
+                        background: '#f8fafc',
+                        color: 'var(--text-muted)',
+                        border: '1px solid var(--border-soft)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                      }}
+                    >
+                      <Calendar size={13} />
+                      Date: {selectedBatch.target_date}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    color: 'var(--text-muted)',
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-soft)',
+                    padding: '5px 12px',
+                    borderRadius: '999px',
+                  }}
+                >
+                  Showing all registered system users
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* Stat Cards */}
           <div className="stats-grid">
             <div className="stat-box">
@@ -232,7 +472,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.total_users}</div>
-                <div className="stat-label">Total Participants (Pool)</div>
+                <div className="stat-label">
+                  {isBatchMode ? 'Participants in Event' : 'Total Participants (Pool)'}
+                </div>
               </div>
             </div>
 
@@ -242,7 +484,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.total_wishlists}</div>
-                <div className="stat-label">Total Wishlist Items</div>
+                <div className="stat-label">
+                  {isBatchMode ? 'Wishlist Items (This Event)' : 'Total Wishlist Items'}
+                </div>
               </div>
             </div>
 
@@ -252,7 +496,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.matched_count}</div>
-                <div className="stat-label">Matched / Drawn</div>
+                <div className="stat-label">
+                  {isBatchMode ? 'Matched in Event' : 'Matched / Drawn'}
+                </div>
               </div>
             </div>
 
@@ -262,7 +508,9 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               </div>
               <div>
                 <div className="stat-value">{stats.unmatched_count}</div>
-                <div className="stat-label">Pending / Unmatched</div>
+                <div className="stat-label">
+                  {isBatchMode ? 'Pending in Event' : 'Pending / Unmatched'}
+                </div>
               </div>
             </div>
           </div>
@@ -273,7 +521,11 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
               <input
                 type="text"
                 className="admin-search-input"
-                placeholder="Search by name, @username, or #number..."
+                placeholder={
+                  isBatchMode && selectedBatch
+                    ? `Search participants in "${selectedBatch.title}"...`
+                    : "Search by name, @username, or #number..."
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -300,7 +552,11 @@ export default function AdminView({ currentTab = 'admin_batches' }) {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                      No participants matched your search.
+                      {searchQuery
+                        ? `No participants matched "${searchQuery}".`
+                        : isBatchMode && selectedBatch
+                        ? `No participants have joined "${selectedBatch.title}" yet.`
+                        : 'No participants registered in the system.'}
                     </td>
                   </tr>
                 ) : (
