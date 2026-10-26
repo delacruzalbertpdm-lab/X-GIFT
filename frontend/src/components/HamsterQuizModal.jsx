@@ -51,7 +51,7 @@ export default function HamsterQuizModal({ user, onQuizComplete }) {
     // Ensure all questions are answered
     const unanswered = questions.filter((q) => !answers[q.id]);
     if (unanswered.length > 0) {
-      setError(`Pakisagutan ang lahat ng ${questions.length} na tanong para magpatuloy!`);
+      setError(`Please answer all ${questions.length} questions to continue!`);
       return;
     }
 
@@ -145,11 +145,11 @@ export default function HamsterQuizModal({ user, onQuizComplete }) {
 
           <p style={{ color: 'var(--text-muted)', fontSize: '0.94rem', lineHeight: '1.6', marginBottom: '28px' }}>
             {result.is_verified_true_hamster ? (
-              <span>Napatunayan mong 100% legit ang iyong Hamster blood! Pasok ka na sa official gift exchange pool! 🎉</span>
+              <span>You proved your 100% authentic Hamster spirit! Welcome to the official gift exchange pool! 🎉</span>
             ) : (
               <span>
-                Bagsak ka sa Hamster verification! Pero dahil pasko at mahal ka ng La Familia Hamster Corp,
-                <strong> makakapasok ka parin sa dashboard ng exchange gift! 🎁</strong>
+                You did not pass verification, but because it's the season of giving,
+                <strong> you can still access the gift exchange dashboard! 🎁</strong>
               </span>
             )}
           </p>
@@ -160,7 +160,7 @@ export default function HamsterQuizModal({ user, onQuizComplete }) {
             style={{ width: '100%', padding: '14px 22px', fontSize: '1.05rem', justifyContent: 'center' }}
             onClick={onQuizComplete}
           >
-            <span>Pumasok sa Dashboard</span>
+            <span>Enter Dashboard</span>
             <ArrowRight size={18} />
           </button>
         </div>
@@ -192,13 +192,13 @@ export default function HamsterQuizModal({ user, onQuizComplete }) {
             <span>🐹 SECURITY CLEARANCE</span>
           </div>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-main)' }}>
-            Patunayan na Tunay Kang Hamster!
+            Verify Your Hamster Identity!
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '6px' }}>
-            Bago pumasok sa dashboard, sagutin ang mga tanong upang malaman kung tunay kang miyembro ng La Familia Hamster Corp.
+            Before accessing the dashboard, answer these questions to verify your membership in La Familia Hamster Corp.
           </p>
           <div style={{ marginTop: '10px', fontSize: '0.82rem', fontWeight: '700', color: 'var(--primary-rose)' }}>
-            Nakasagot: {answeredCount} / {questions.length} na Tanong
+            Answered: {answeredCount} / {questions.length} Questions
           </div>
         </div>
 
@@ -310,7 +310,7 @@ export default function HamsterQuizModal({ user, onQuizComplete }) {
             style={{ width: '100%', padding: '14px 22px', fontSize: '1rem', justifyContent: 'center' }}
             disabled={submitting}
           >
-            {submitting ? 'Sinusuri ang iyong sagot...' : 'Ipasa ang Aking Sagot 🐹✨'}
+            {submitting ? 'Evaluating your answers...' : 'Submit My Answers 🐹✨'}
           </button>
         </form>
       </div>

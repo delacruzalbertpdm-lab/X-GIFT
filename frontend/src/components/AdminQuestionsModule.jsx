@@ -90,7 +90,7 @@ export default function AdminQuestionsModule() {
     setConfirmState({
       isOpen: true,
       title: 'Delete Question?',
-      message: `Sigurado ka bang nais mong tanggalin ang tanong na:\n\n"${text.substring(0, 70)}..."?`,
+      message: `Are you sure you want to delete this question:\n\n"${text.substring(0, 70)}..."?`,
       confirmText: 'Yes, Delete',
       cancelText: 'Cancel',
       type: 'danger',
@@ -147,7 +147,7 @@ export default function AdminQuestionsModule() {
             <span>🐹 Hamster Verification Questions ({questions.length})</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            Ang mga tanong na ito ang sasagutan ng mga participants bago makapasok sa kanilang dashboard.
+            Participants must answer these verification questions before accessing their dashboard.
           </p>
         </div>
 
@@ -166,14 +166,14 @@ export default function AdminQuestionsModule() {
         <div className="empty-box" style={{ padding: '40px 20px' }}>
           <HelpCircle size={36} color="var(--primary-rose)" />
           <div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Walang verification questions pa!</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>No verification questions yet!</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-              Mag-add ng mga tanong para masubok kung sino ang tunay na La Familia Hamster Corp member!
+              Add questions to verify official members of La Familia Hamster Corp!
             </p>
           </div>
           <button className="btn-primary" onClick={handleOpenAdd} style={{ marginTop: '8px' }}>
             <Plus size={18} />
-            <span>Gumawa ng Unang Tanong</span>
+            <span>Create First Question</span>
           </button>
         </div>
       ) : (
@@ -332,7 +332,7 @@ export default function AdminQuestionsModule() {
                 <textarea
                   className="modal-clean-input"
                   rows={3}
-                  placeholder="Halimbawa: Ano ang official snack ng La Familia Hamster Corp?"
+                  placeholder="Example: What is the official trademark snack of La Familia Hamster Corp?"
                   value={formData.question_text}
                   onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
                   required
@@ -388,7 +388,7 @@ export default function AdminQuestionsModule() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Tamang Sagot (Correct Option) *</label>
+                <label className="form-label">Correct Option *</label>
                 <select
                   className="modal-clean-input"
                   value={formData.correct_option}
@@ -407,7 +407,7 @@ export default function AdminQuestionsModule() {
                 <input
                   type="text"
                   className="modal-clean-input"
-                  placeholder="Bakit ito ang tamang sagot?"
+                  placeholder="Why is this the correct answer?"
                   value={formData.explanation}
                   onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
                 />

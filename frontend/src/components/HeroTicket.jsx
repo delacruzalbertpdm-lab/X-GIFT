@@ -56,7 +56,7 @@ export default function HeroTicket({ user }) {
                 }}
               >
                 <AlertTriangle size={16} color="#dc2626" />
-                <span>🐹❌ You're not true La Familia Hamster Corp (Score: {user.quiz_score}/{user.quiz_total}) — but welcome parin sa exchange gift!</span>
+                <span>🐹❌ Hamster Guest (Score: {user.quiz_score}/{user.quiz_total}) — but you're warmly welcome to the gift exchange!</span>
               </div>
             )}
           </div>
